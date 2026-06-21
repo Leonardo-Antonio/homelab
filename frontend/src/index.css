@@ -1,0 +1,64 @@
+:root {
+  --bg: #f7f6f2;
+  --surface: #fffefa;
+  --surface-strong: #f1efe7;
+  --text: #171717;
+  --text-muted: #626057;
+  --border: #ddd8ca;
+  --border-strong: #bdb5a3;
+  --accent: #0b6b5f;
+  --accent-dark: #084f46;
+  --accent-soft: #d9eee9;
+  --danger-soft: #fbe6df;
+  --danger-text: #8f2c11;
+  --success: #16784f;
+  --success-soft: #dff2e7;
+  --shadow: 0 24px 70px rgba(23, 23, 23, 0.1);
+  --radius: 8px;
+  --font-body: Avenir Next, Avenir, Segoe UI, sans-serif;
+  --font-display: Georgia, Times New Roman, serif;
+  --sileo-state-success: oklch(0.51 0.11 174);
+  --sileo-state-info: oklch(0.54 0.12 232);
+  --sileo-state-warning: oklch(0.72 0.16 78);
+  --sileo-state-error: oklch(0.58 0.18 29);
+
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-synthesis: none;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  min-height: 100svh;
+}

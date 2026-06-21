@@ -1,16 +1,142 @@
-# React + Vite
+# HomeLab
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+HomeLab is a personal utilities app for small workflows that are useful at home, on a phone, tablet, or desktop.
 
-Currently, two official plugins are available:
+The project is organized as a simple monorepo:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```text
+HomeLab/
+  frontend/   React + Vite app
+  backend/    Go REST API
+```
 
-## React Compiler
+## Current Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Clipboard
 
-## Expanding the ESLint configuration
+Save reusable text snippets and copy them later with one click.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Create snippets.
+- Copy any saved item to the system clipboard.
+- Delete one item or clear the full list.
+- Paginated list, 15 items by default.
+- Data is persisted in SQLite through the backend.
+
+### Photos
+
+Take photos from a device camera and keep them in a gallery.
+
+- Opens the native camera on supported mobile browsers.
+- Saves the original image file received from the browser, without frontend recompression.
+- Shows a gallery of saved photos.
+- Opens photos in a larger viewer.
+- Deletes saved photos.
+- Stores metadata in SQLite and image files on disk.
+
+## Tech Stack
+
+Frontend:
+
+```text
+React
+Vite
+Sileo notifications
+Nginx for production serving
+```
+
+Backend:
+
+```text
+Go
+REST API
+SQLite
+modernc.org/sqlite
+```
+
+Infrastructure:
+
+```text
+Docker
+Docker Compose
+```
+
+## Local Development
+
+Run the backend:
+
+```bash
+cd backend
+go run ./cmd/api
+```
+
+Run the frontend:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+Default local URLs:
+
+```text
+Frontend: http://localhost:5173 or http://localhost:5174
+Backend:  http://localhost:8080
+```
+
+## Docker Deployment
+
+From the repository root:
+
+```bash
+docker compose up -d --build
+```
+
+Open:
+
+```text
+http://SERVER_IP:8081
+```
+
+The frontend container serves the React app with Nginx and proxies `/api/*` to the backend container through the Docker network.
+
+Persistent data is stored on the host:
+
+```text
+backend/data/homelab.db
+backend/data/photos/
+```
+
+Back up `backend/data/` to preserve clipboard snippets and photos.
+
+More deployment details are in [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+## Validation
+
+Frontend:
+
+```bash
+cd frontend
+pnpm lint
+pnpm build
+```
+
+Backend:
+
+```bash
+cd backend
+go test ./...
+go build ./cmd/api
+```
+
+Docker:
+
+```bash
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+## Notes
+
+For mobile camera flows on a real server, use HTTPS in front of the app. Modern browsers are stricter with camera and device APIs outside secure contexts.

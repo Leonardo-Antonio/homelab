@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: homelab-backend
+    restart: unless-stopped
+    environment:
+      HTTP_ADDR: :8080
+      DATABASE_PATH: /app/data/homelab.db
+      PHOTO_STORAGE_DIR: /app/data/photos
+      ALLOWED_ORIGIN: "*"
+    volumes:
+      - ./backend/data:/app/data
+    networks:
+      - homelab
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: homelab-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    driver: bridge
