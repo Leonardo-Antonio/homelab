@@ -6,6 +6,12 @@
 docker compose up -d --build
 ```
 
+Optional camera stream override:
+
+```bash
+VITE_CAMERA_STREAM_URL=http://192.168.31.67/stream docker compose up -d --build
+```
+
 Open:
 
 ```text
@@ -20,6 +26,7 @@ backend   Go REST API               internal port 8080
 ```
 
 The frontend proxies `/api/*` to the backend through the internal Docker network.
+The camera stream URL is baked into the frontend build through `VITE_CAMERA_STREAM_URL`.
 
 ## Persistent Data
 

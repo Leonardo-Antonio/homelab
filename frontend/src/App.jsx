@@ -1,6 +1,7 @@
 import { Toaster } from 'sileo'
 import { useState } from 'react'
 import { AppShell } from './components/AppShell.jsx'
+import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
 import './App.css'
@@ -8,6 +9,7 @@ import './App.css'
 const pages = {
   clipboard: <ClipboardPage />,
   photos: <PhotosPage />,
+  camera: <CameraStreamPage />,
 }
 
 function App() {

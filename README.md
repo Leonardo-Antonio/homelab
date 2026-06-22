@@ -33,6 +33,14 @@ Take photos from a device camera and keep them in a gallery.
 - Deletes saved photos.
 - Stores metadata in SQLite and image files on disk.
 
+### Home Camera
+
+View the live stream from a home camera.
+
+- Dedicated page for the camera stream.
+- The frontend reads the stream directly from `VITE_CAMERA_STREAM_URL`.
+- Default stream URL: `http://192.168.31.67/stream`.
+
 ## Tech Stack
 
 Frontend:
@@ -77,6 +85,16 @@ pnpm install
 pnpm dev
 ```
 
+Optional frontend environment:
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+```text
+VITE_CAMERA_STREAM_URL=http://192.168.31.67/stream
+```
+
 Default local URLs:
 
 ```text
@@ -90,6 +108,12 @@ From the repository root:
 
 ```bash
 docker compose up -d --build
+```
+
+To override the camera stream URL during Docker build:
+
+```bash
+VITE_CAMERA_STREAM_URL=http://192.168.31.67/stream docker compose up -d --build
 ```
 
 Open:

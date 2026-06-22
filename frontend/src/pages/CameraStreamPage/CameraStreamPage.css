@@ -1,0 +1,140 @@
+.camera-stream-page {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.camera-stream-header {
+  align-items: end;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.camera-stream-header h1 {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.8vw, 5.6rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.stream-status {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+  font-size: 0.86rem;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.stream-status-online {
+  background: var(--success-soft);
+  border-color: rgba(22, 120, 79, 0.18);
+  color: var(--success);
+}
+
+.stream-console {
+  background: #171717;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: #fffefa;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.stream-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.stream-toolbar span {
+  color: rgba(255, 254, 250, 0.66);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stream-frame {
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    #0d0d0d;
+  background-size: 42px 42px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.stream-frame img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.stream-overlay {
+  align-content: center;
+  background: rgba(13, 13, 13, 0.82);
+  display: grid;
+  gap: 12px;
+  inset: 0;
+  justify-items: center;
+  position: absolute;
+  text-align: center;
+}
+
+.stream-overlay span {
+  animation: streamPulse 1.2s ease-in-out infinite;
+  border: 2px solid rgba(240, 193, 90, 0.28);
+  border-radius: 50%;
+  height: 54px;
+  position: relative;
+  width: 54px;
+}
+
+.stream-overlay span::after {
+  background: #f0c15a;
+  border-radius: 50%;
+  content: '';
+  inset: 18px;
+  position: absolute;
+}
+
+@keyframes streamPulse {
+  0% {
+    transform: scale(0.94);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(0.94);
+  }
+}
+
+@media (max-width: 760px) {
+  .camera-stream-header,
+  .stream-toolbar {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .stream-toolbar .button {
+    width: 100%;
+  }
+}
