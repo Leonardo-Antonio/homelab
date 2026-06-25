@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"homelab/backend/internal/config"
 	"homelab/backend/internal/httpapi"
@@ -39,6 +40,13 @@ func (h *Handler) connect(w http.ResponseWriter, r *http.Request) {
 		httpapi.WriteError(w, http.StatusServiceUnavailable, "TerminalDisabled", "The SSH terminal is disabled.", nil)
 		return
 	}
+
+	// The server's Read/Write timeouts set deadlines on the connection that
+	// would abort this long-lived session (coder/websocket uses context-based
+	// timeouts and does not reset them). Clear them before the upgrade.
+	responseController := http.NewResponseController(w)
+	_ = responseController.SetReadDeadline(time.Time{})
+	_ = responseController.SetWriteDeadline(time.Time{})
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: h.originPatterns(),
