@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/Button.jsx'
 import { EmptyState } from '../../components/EmptyState.jsx'
 import { useTerminalSession } from '../../hooks/useTerminalSession.js'
@@ -11,7 +12,26 @@ const STATUS_LABELS = {
 
 export function TerminalPage() {
   const { containerRef, status, info, reconnect } = useTerminalSession()
+  const consoleRef = useRef(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const isDisabled = info?.enabled === false
+
+  useEffect(() => {
+    function handleChange() {
+      setIsFullscreen(document.fullscreenElement === consoleRef.current)
+    }
+
+    document.addEventListener('fullscreenchange', handleChange)
+    return () => document.removeEventListener('fullscreenchange', handleChange)
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      consoleRef.current?.requestFullscreen?.()
+    }
+  }, [])
 
   if (isDisabled) {
     return (
@@ -42,12 +62,22 @@ export function TerminalPage() {
         <div className={`terminal-status terminal-status-${status}`}>{STATUS_LABELS[status]}</div>
       </header>
 
-      <section className="terminal-console" aria-label="Terminal SSH">
+      <section className="terminal-console" aria-label="Terminal SSH" ref={consoleRef}>
         <div className="terminal-toolbar">
           <span>{target}</span>
-          <Button type="button" variant="ghost" onClick={reconnect}>
-            Reconectar
-          </Button>
+          <div className="terminal-toolbar-actions">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={toggleFullscreen}
+              aria-pressed={isFullscreen}
+            >
+              {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={reconnect}>
+              Reconectar
+            </Button>
+          </div>
         </div>
 
         <div className="terminal-frame">

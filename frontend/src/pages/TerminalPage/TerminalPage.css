@@ -65,6 +65,12 @@
   white-space: nowrap;
 }
 
+.terminal-toolbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
 .terminal-frame {
   background: #0d0d0d;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -82,6 +88,23 @@
 /* xterm fills its mount container. */
 .terminal-mount .xterm,
 .terminal-mount .xterm-viewport {
+  height: 100%;
+}
+
+/* Fullscreen: the console fills the viewport and the terminal grows with it. */
+.terminal-console:fullscreen {
+  border-radius: 0;
+  box-shadow: none;
+  height: 100%;
+  width: 100%;
+  grid-template-rows: auto 1fr;
+}
+
+.terminal-console:fullscreen .terminal-frame {
+  min-height: 0;
+}
+
+.terminal-console:fullscreen .terminal-mount {
   height: 100%;
 }
 
