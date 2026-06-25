@@ -1,6 +1,6 @@
 import { Toaster } from 'sileo'
-import { useState } from 'react'
 import { AppShell } from './components/AppShell.jsx'
+import { useRoute } from './hooks/useRoute.js'
 import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
@@ -23,7 +23,7 @@ function getStandaloneView() {
 }
 
 function App() {
-  const [activePage, setActivePage] = useState('clipboard')
+  const { page, navigate } = useRoute()
   const isStandaloneTerminal = getStandaloneView() === STANDALONE_VIEW
 
   return (
@@ -40,8 +40,8 @@ function App() {
       {isStandaloneTerminal ? (
         <TerminalPage standalone />
       ) : (
-        <AppShell activePage={activePage} onNavigate={setActivePage}>
-          {pages[activePage]}
+        <AppShell activePage={page} onNavigate={navigate}>
+          {pages[page]}
         </AppShell>
       )}
     </>

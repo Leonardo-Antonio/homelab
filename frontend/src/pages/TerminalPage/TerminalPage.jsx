@@ -11,8 +11,9 @@ const STATUS_LABELS = {
 }
 
 // Standalone view: only the terminal, filling the whole window. Opened in a new
-// tab via the query param so the SPA renders it without the app shell.
-export const STANDALONE_VIEW = 'terminal'
+// tab via the `?view=standalone` query param so the SPA renders it without the
+// app shell, regardless of the current route.
+export const STANDALONE_VIEW = 'standalone'
 
 export function TerminalPage({ standalone = false }) {
   const { containerRef, status, info, reconnect } = useTerminalSession()
