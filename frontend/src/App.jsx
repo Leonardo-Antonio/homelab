@@ -4,7 +4,7 @@ import { AppShell } from './components/AppShell.jsx'
 import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
-import { TerminalPage } from './pages/TerminalPage/TerminalPage.jsx'
+import { STANDALONE_VIEW, TerminalPage } from './pages/TerminalPage/TerminalPage.jsx'
 import './App.css'
 
 const pages = {
@@ -14,8 +14,17 @@ const pages = {
   terminal: <TerminalPage />,
 }
 
+function getStandaloneView() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return new URLSearchParams(window.location.search).get('view')
+}
+
 function App() {
   const [activePage, setActivePage] = useState('clipboard')
+  const isStandaloneTerminal = getStandaloneView() === STANDALONE_VIEW
 
   return (
     <>
@@ -28,9 +37,13 @@ function App() {
           roundness: 14,
         }}
       />
-      <AppShell activePage={activePage} onNavigate={setActivePage}>
-        {pages[activePage]}
-      </AppShell>
+      {isStandaloneTerminal ? (
+        <TerminalPage standalone />
+      ) : (
+        <AppShell activePage={activePage} onNavigate={setActivePage}>
+          {pages[activePage]}
+        </AppShell>
+      )}
     </>
   )
 }

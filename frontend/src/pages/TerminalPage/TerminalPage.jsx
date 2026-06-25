@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback } from 'react'
 import { Button } from '../../components/Button.jsx'
 import { EmptyState } from '../../components/EmptyState.jsx'
 import { useTerminalSession } from '../../hooks/useTerminalSession.js'
@@ -10,27 +10,18 @@ const STATUS_LABELS = {
   disconnected: 'Desconectado',
 }
 
-export function TerminalPage() {
+// Standalone view: only the terminal, filling the whole window. Opened in a new
+// tab via the query param so the SPA renders it without the app shell.
+export const STANDALONE_VIEW = 'terminal'
+
+export function TerminalPage({ standalone = false }) {
   const { containerRef, status, info, reconnect } = useTerminalSession()
-  const consoleRef = useRef(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const isDisabled = info?.enabled === false
 
-  useEffect(() => {
-    function handleChange() {
-      setIsFullscreen(document.fullscreenElement === consoleRef.current)
-    }
-
-    document.addEventListener('fullscreenchange', handleChange)
-    return () => document.removeEventListener('fullscreenchange', handleChange)
-  }, [])
-
-  const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen()
-    } else {
-      consoleRef.current?.requestFullscreen?.()
-    }
+  const openInNewTab = useCallback(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('view', STANDALONE_VIEW)
+    window.open(url.toString(), '_blank', 'noopener,noreferrer')
   }, [])
 
   if (isDisabled) {
@@ -53,27 +44,33 @@ export function TerminalPage() {
   const target = info?.host ? `${info.user ? `${info.user}@` : ''}${info.host}:${info.port}` : 'SSH'
 
   return (
-    <section className="terminal-page" aria-labelledby="terminal-title">
-      <header className="terminal-header">
-        <div>
-          <p className="eyebrow">Remote shell</p>
-          <h1 id="terminal-title">Terminal SSH en vivo.</h1>
-        </div>
-        <div className={`terminal-status terminal-status-${status}`}>{STATUS_LABELS[status]}</div>
-      </header>
+    <section
+      className={`terminal-page ${standalone ? 'terminal-page-standalone' : ''}`.trim()}
+      aria-labelledby="terminal-title"
+    >
+      {!standalone ? (
+        <header className="terminal-header">
+          <div>
+            <p className="eyebrow">Remote shell</p>
+            <h1 id="terminal-title">Terminal SSH en vivo.</h1>
+          </div>
+          <div className={`terminal-status terminal-status-${status}`}>{STATUS_LABELS[status]}</div>
+        </header>
+      ) : null}
 
-      <section className="terminal-console" aria-label="Terminal SSH" ref={consoleRef}>
+      <section className="terminal-console" aria-label="Terminal SSH">
         <div className="terminal-toolbar">
           <span>{target}</span>
           <div className="terminal-toolbar-actions">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={toggleFullscreen}
-              aria-pressed={isFullscreen}
-            >
-              {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            </Button>
+            {standalone ? (
+              <span className={`terminal-status terminal-status-${status}`}>
+                {STATUS_LABELS[status]}
+              </span>
+            ) : (
+              <Button type="button" variant="ghost" onClick={openInNewTab}>
+                Abrir en pestaña nueva
+              </Button>
+            )}
             <Button type="button" variant="ghost" onClick={reconnect}>
               Reconectar
             </Button>

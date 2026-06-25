@@ -91,20 +91,26 @@
   height: 100%;
 }
 
-/* Fullscreen: the console fills the viewport and the terminal grows with it. */
-.terminal-console:fullscreen {
-  border-radius: 0;
-  box-shadow: none;
-  height: 100%;
-  width: 100%;
-  grid-template-rows: auto 1fr;
+/* Standalone: only the terminal, filling the whole window (opened in a new tab). */
+.terminal-page-standalone {
+  box-sizing: border-box;
+  gap: 0;
+  height: 100svh;
+  margin: 0;
+  max-width: none;
+  padding: 12px;
 }
 
-.terminal-console:fullscreen .terminal-frame {
+.terminal-page-standalone .terminal-console {
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+
+.terminal-page-standalone .terminal-frame {
   min-height: 0;
 }
 
-.terminal-console:fullscreen .terminal-mount {
+.terminal-page-standalone .terminal-mount {
   height: 100%;
 }
 
