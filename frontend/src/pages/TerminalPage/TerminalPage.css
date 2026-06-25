@@ -1,0 +1,102 @@
+.terminal-page {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.terminal-header {
+  align-items: end;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.terminal-header h1 {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.8vw, 5.6rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.terminal-status {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+  font-size: 0.86rem;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.terminal-status-connected {
+  background: var(--success-soft);
+  border-color: rgba(22, 120, 79, 0.18);
+  color: var(--success);
+}
+
+.terminal-console {
+  background: #171717;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: #fffefa;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.terminal-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.terminal-toolbar span {
+  color: rgba(255, 254, 250, 0.66);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-frame {
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  overflow: hidden;
+  padding: 10px;
+}
+
+.terminal-mount {
+  height: 60vh;
+  min-height: 320px;
+  width: 100%;
+}
+
+/* xterm fills its mount container. */
+.terminal-mount .xterm,
+.terminal-mount .xterm-viewport {
+  height: 100%;
+}
+
+@media (max-width: 760px) {
+  .terminal-header,
+  .terminal-toolbar {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .terminal-toolbar .button {
+    width: 100%;
+  }
+
+  .terminal-mount {
+    height: 50vh;
+  }
+}

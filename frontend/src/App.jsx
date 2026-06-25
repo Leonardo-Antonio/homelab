@@ -4,12 +4,14 @@ import { AppShell } from './components/AppShell.jsx'
 import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
+import { TerminalPage } from './pages/TerminalPage/TerminalPage.jsx'
 import './App.css'
 
 const pages = {
   clipboard: <ClipboardPage />,
   photos: <PhotosPage />,
   camera: <CameraStreamPage />,
+  terminal: <TerminalPage />,
 }
 
 function App() {

@@ -2,6 +2,7 @@ const navItems = [
   { id: 'clipboard', label: 'Clipboard', icon: '#' },
   { id: 'photos', label: 'Fotos', icon: 'O' },
   { id: 'camera', label: 'Camara', icon: '>' },
+  { id: 'terminal', label: 'Terminal', icon: '_' },
 ]
 
 export function AppShell({ activePage, children, onNavigate }) {

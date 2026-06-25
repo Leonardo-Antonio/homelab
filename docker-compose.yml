@@ -9,6 +9,15 @@ services:
       DATABASE_PATH: /app/data/homelab.db
       PHOTO_STORAGE_DIR: /app/data/photos
       ALLOWED_ORIGIN: "*"
+      # SSH web terminal. Disabled by default; set SSH_ENABLED=true and the
+      # target/credentials to expose the Terminal page. Credentials stay
+      # server-side. See doc_ssh.md for the full configuration reference.
+      SSH_ENABLED: ${SSH_ENABLED:-false}
+      SSH_HOST: ${SSH_HOST:-127.0.0.1}
+      SSH_PORT: ${SSH_PORT:-22}
+      SSH_USER: ${SSH_USER:-}
+      SSH_PASSWORD: ${SSH_PASSWORD:-}
+      SSH_INSECURE_IGNORE_HOST_KEY: ${SSH_INSECURE_IGNORE_HOST_KEY:-false}
     volumes:
       - ./backend/data:/app/data
     networks:

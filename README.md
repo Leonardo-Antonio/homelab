@@ -41,6 +41,16 @@ View the live stream from a home camera.
 - The frontend reads the stream directly from `VITE_CAMERA_STREAM_URL`.
 - Default stream URL: `http://192.168.31.67/stream`.
 
+### Terminal
+
+Open an interactive SSH terminal to a pre-configured host from a web page.
+
+- Full terminal (xterm.js) with colors, control keys and resize.
+- The browser talks WebSocket to the backend, which bridges an SSH PTY session.
+- Target host and credentials are configured server-side; clients cannot pick a host.
+- Disabled by default. Enable with `SSH_ENABLED=true` plus host/credentials.
+- See [doc_ssh.md](./doc_ssh.md) for the design and full configuration reference.
+
 ## Tech Stack
 
 Frontend:

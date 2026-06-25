@@ -68,6 +68,12 @@ func (r *statusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
+// Unwrap exposes the underlying ResponseWriter so that http.ResponseController
+// can reach optional interfaces (e.g. http.Hijacker) for WebSocket upgrades.
+func (r *statusRecorder) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
+}
+
 func isAllowedOrigin(origin, allowedOrigin string) bool {
 	if allowedOrigin == "*" {
 		return true
