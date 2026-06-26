@@ -32,9 +32,17 @@ export function AppShell({ activePage, children, onNavigate }) {
     window.localStorage.setItem(COLLAPSED_STORAGE_KEY, String(collapsed))
   }, [collapsed])
 
-  // Only show enabled modules; Settings is always present.
+  // Order modules by the saved preference (unknown/missing ids fall back to the
+  // declared order), then keep only the enabled ones. Settings is always last.
+  const byId = new Map(moduleItems.map((item) => [item.id, item]))
+  const orderedIds = [
+    ...(settings.moduleOrder || []).filter((id) => byId.has(id)),
+    ...moduleItems.map((item) => item.id).filter((id) => !(settings.moduleOrder || []).includes(id)),
+  ]
   const visibleItems = [
-    ...moduleItems.filter((item) => settings.modules?.[item.id] !== false),
+    ...orderedIds
+      .map((id) => byId.get(id))
+      .filter((item) => settings.modules?.[item.id] !== false),
     configItem,
   ]
 

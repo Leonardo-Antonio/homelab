@@ -173,15 +173,41 @@
 
 .config-module {
   align-items: center;
+  border: 1px solid transparent;
   border-radius: 10px;
   display: flex;
   gap: 12px;
   padding: 10px 12px;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
 }
 
 .config-module:hover {
   background: var(--surface-strong);
+}
+
+/* Drag handle: the obvious grab point for reordering. */
+.config-module-handle {
+  color: var(--text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  letter-spacing: -1px;
+  user-select: none;
+}
+
+.config-module:active .config-module-handle {
+  cursor: grabbing;
+}
+
+/* The row being dragged fades; the row under the cursor shows an insertion cue. */
+.config-module-dragging {
+  opacity: 0.4;
+}
+
+.config-module-drop {
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 
 .config-module-icon {

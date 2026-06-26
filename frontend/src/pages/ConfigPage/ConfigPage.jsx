@@ -1,10 +1,28 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSettings } from '../../context/SettingsContext.jsx'
 import { notify } from '../../services/notifications.js'
 import './ConfigPage.css'
 
 const MODULE_IDS = ['clipboard', 'photos', 'camera', 'terminal', 'notes', 'storage']
 const MODULE_ICONS = { clipboard: '#', photos: 'O', camera: '>', terminal: '_', notes: '≡', storage: '⛁' }
+
+// orderedModules returns the known module ids in the saved order, appending any
+// the stored order happens to omit so the list is always complete.
+function orderedModules(savedOrder) {
+  const known = (savedOrder || []).filter((id) => MODULE_IDS.includes(id))
+  const missing = MODULE_IDS.filter((id) => !known.includes(id))
+  return [...known, ...missing]
+}
+
+// moveItem returns a new array with `id` moved to `targetId`'s position.
+function moveItem(order, id, targetId) {
+  if (id === targetId) return order
+  const next = order.filter((item) => item !== id)
+  const targetIndex = next.indexOf(targetId)
+  if (targetIndex < 0) return order
+  next.splice(targetIndex, 0, id)
+  return next
+}
 
 // ─── Segmented control ────────────────────────────────────────────────────────
 
@@ -49,6 +67,10 @@ function Toggle({ checked, onChange, label }) {
 export function ConfigPage() {
   const { settings, updateSettings, t } = useSettings()
   const [isSaving, setIsSaving] = useState(false)
+  // Reorder drag-and-drop state for the modules list.
+  const [draggingId, setDraggingId] = useState(null)
+  const [dropTargetId, setDropTargetId] = useState(null)
+  const dragIdRef = useRef(null)
 
   async function apply(patch) {
     setIsSaving(true)
@@ -59,6 +81,18 @@ export function ConfigPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const modules = orderedModules(settings.moduleOrder)
+
+  function handleReorderDrop(targetId) {
+    const id = dragIdRef.current
+    dragIdRef.current = null
+    setDraggingId(null)
+    setDropTargetId(null)
+    if (!id || id === targetId) return
+    const next = moveItem(modules, id, targetId)
+    apply({ moduleOrder: next })
   }
 
   const themeOptions = [
@@ -128,10 +162,35 @@ export function ConfigPage() {
         <h2 className="config-section-title">{t('config.modules')}</h2>
         <p className="config-section-desc">{t('config.modules.desc')}</p>
         <ul className="config-modules">
-          {MODULE_IDS.map((id) => {
+          {modules.map((id) => {
             const enabled = settings.modules?.[id] !== false
+            const className = [
+              'config-module',
+              draggingId === id ? 'config-module-dragging' : '',
+              dropTargetId === id ? 'config-module-drop' : '',
+            ].filter(Boolean).join(' ')
             return (
-              <li key={id} className="config-module">
+              <li
+                key={id}
+                className={className}
+                draggable
+                onDragStart={(event) => {
+                  dragIdRef.current = id
+                  setDraggingId(id)
+                  event.dataTransfer.effectAllowed = 'move'
+                  event.dataTransfer.setData('text/plain', id)
+                }}
+                onDragEnd={() => { dragIdRef.current = null; setDraggingId(null); setDropTargetId(null) }}
+                onDragOver={(event) => {
+                  if (!dragIdRef.current || dragIdRef.current === id) return
+                  event.preventDefault()
+                  event.dataTransfer.dropEffect = 'move'
+                  setDropTargetId(id)
+                }}
+                onDragLeave={() => setDropTargetId((current) => (current === id ? null : current))}
+                onDrop={(event) => { event.preventDefault(); handleReorderDrop(id) }}
+              >
+                <span className="config-module-handle" aria-hidden="true" title={t('config.reorder')}>⠿</span>
                 <span className="config-module-icon" aria-hidden="true">{MODULE_ICONS[id]}</span>
                 <span className="config-module-name">{t(`nav.${id}`)}</span>
                 <Toggle checked={enabled} label={t(`nav.${id}`)} onChange={(value) => apply({ modules: { [id]: value } })} />

@@ -21,20 +21,27 @@ type Settings struct {
 	Language string          `json:"language"`
 	Font     string          `json:"font"`
 	Modules  map[string]bool `json:"modules"`
+	// ModuleOrder is the sidebar order of the modules. A map cannot carry
+	// order, so it lives in its own slice; normalize() keeps it a valid
+	// permutation of KnownModules.
+	ModuleOrder []string `json:"moduleOrder"`
 }
 
 // Default returns the baseline settings used before the user customises
 // anything (and to backfill any field missing from a stored document).
 func Default() Settings {
 	modules := make(map[string]bool, len(KnownModules))
-	for _, id := range KnownModules {
+	order := make([]string, len(KnownModules))
+	for i, id := range KnownModules {
 		modules[id] = true
+		order[i] = id
 	}
 	return Settings{
-		Theme:    "light",
-		Language: "es",
-		Font:     "sans",
-		Modules:  modules,
+		Theme:       "light",
+		Language:    "es",
+		Font:        "sans",
+		Modules:     modules,
+		ModuleOrder: order,
 	}
 }
 
@@ -56,7 +63,29 @@ func (s Settings) normalize() Settings {
 			out.Modules[id] = enabled
 		}
 	}
+	out.ModuleOrder = normalizeOrder(s.ModuleOrder)
 	return out
+}
+
+// normalizeOrder turns an arbitrary client-supplied order into a valid
+// permutation of KnownModules: it keeps the requested order, ignores unknown or
+// duplicated ids, then appends any module the client left out (in default
+// order) so every module always appears exactly once.
+func normalizeOrder(requested []string) []string {
+	seen := make(map[string]bool, len(KnownModules))
+	order := make([]string, 0, len(KnownModules))
+	for _, id := range requested {
+		if contains(KnownModules, id) && !seen[id] {
+			seen[id] = true
+			order = append(order, id)
+		}
+	}
+	for _, id := range KnownModules {
+		if !seen[id] {
+			order = append(order, id)
+		}
+	}
+	return order
 }
 
 // validate ensures every field holds an allowed value.

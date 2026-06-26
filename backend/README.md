@@ -105,9 +105,14 @@ Body / response shape:
   "modules": {             // toggle sidebar sections; "config" is never hidden
     "clipboard": true, "photos": true, "camera": true,
     "terminal": true, "notes": true, "storage": true
-  }
+  },
+  "moduleOrder": [         // sidebar order; normalized to a full permutation
+    "clipboard", "photos", "camera", "terminal", "notes", "storage"
+  ]
 }
 ```
 
 Missing fields are backfilled from the defaults and unknown module keys are
-dropped, so stored documents stay complete and forward-compatible.
+dropped. `moduleOrder` is normalized to a complete permutation of the known
+modules (requested order kept, unknown/duplicate ids removed, omitted modules
+appended), so stored documents stay complete and forward-compatible.

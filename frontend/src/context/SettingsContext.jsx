@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { getSettings, saveSettings } from '../services/settingsApi.js'
 import { createTranslator } from '../i18n.js'
 
+const MODULE_ORDER = ['clipboard', 'photos', 'camera', 'terminal', 'notes', 'storage']
+
 const DEFAULT_SETTINGS = {
   theme: 'light',
   language: 'es',
@@ -14,6 +16,7 @@ const DEFAULT_SETTINGS = {
     notes: true,
     storage: true,
   },
+  moduleOrder: MODULE_ORDER,
 }
 
 const SettingsContext = createContext(null)
@@ -42,10 +45,14 @@ function applyToDocument(settings) {
 
 // withDefaults backfills any missing field so the document is always complete.
 function withDefaults(value) {
+  const order = Array.isArray(value?.moduleOrder) && value.moduleOrder.length
+    ? value.moduleOrder
+    : DEFAULT_SETTINGS.moduleOrder
   return {
     ...DEFAULT_SETTINGS,
     ...value,
     modules: { ...DEFAULT_SETTINGS.modules, ...(value?.modules || {}) },
+    moduleOrder: order,
   }
 }
 
