@@ -75,14 +75,23 @@ function RenameInput({ defaultValue, onSubmit, onCancel }) {
 
 // ─── Grid card ────────────────────────────────────────────────────────────────
 
-function GridCard({ node, isRenaming, onActivate, menu }) {
+function GridCard({ node, isRenaming, onActivate, menu, dnd }) {
   const isDir = node.type === 'dir'
+  const className = [
+    'grid-card',
+    isDir ? 'grid-card-dir' : '',
+    dnd.isDragging ? 'dnd-dragging' : '',
+    dnd.isDropTarget ? 'dnd-drop-target' : '',
+  ].filter(Boolean).join(' ')
+
   return (
     <div
-      className={`grid-card ${isDir ? 'grid-card-dir' : ''}`}
+      className={className}
       onDoubleClick={() => onActivate(node)}
       tabIndex={0}
       onKeyDown={(event) => event.key === 'Enter' && onActivate(node)}
+      {...dnd.itemProps}
+      {...dnd.folderDropProps}
     >
       <button type="button" className="grid-card-body" onClick={() => onActivate(node)}>
         <span className="grid-card-thumb">
@@ -104,10 +113,16 @@ function GridCard({ node, isRenaming, onActivate, menu }) {
 
 // ─── List row ─────────────────────────────────────────────────────────────────
 
-function ListRow({ node, isRenaming, onActivate, menu }) {
+function ListRow({ node, isRenaming, onActivate, menu, dnd }) {
   const isDir = node.type === 'dir'
+  const className = [
+    'list-row',
+    dnd.isDragging ? 'dnd-dragging' : '',
+    dnd.isDropTarget ? 'dnd-drop-target' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <div className="list-row" onDoubleClick={() => onActivate(node)}>
+    <div className={className} onDoubleClick={() => onActivate(node)} {...dnd.itemProps} {...dnd.folderDropProps}>
       <button type="button" className="list-row-main" onClick={() => onActivate(node)}>
         <Thumb node={node} size="sm" />
         {isRenaming ? (
@@ -126,13 +141,18 @@ function ListRow({ node, isRenaming, onActivate, menu }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function StoragePage() {
-  const { currentId, items, breadcrumb, isLoading, error, uploads, open, addFolder, rename, remove, upload } = useStorage()
+  const { currentId, items, breadcrumb, isLoading, error, uploads, open, addFolder, rename, move, remove, upload } = useStorage()
   const [view, setView] = useState(readView)
   const [sort, setSort] = useState('name')
   const [query, setQuery] = useState('')
   const [renamingId, setRenamingId] = useState(null)
   const [previewId, setPreviewId] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
+  // Internal move drag-and-drop: which item is being dragged and which folder /
+  // breadcrumb crumb is currently the hovered drop target.
+  const [draggingId, setDraggingId] = useState(null)
+  const [dropTargetId, setDropTargetId] = useState(null)
+  const dragNodeRef = useRef(null)
   const fileInputRef = useRef(null)
   const dragDepth = useRef(0)
 
@@ -229,7 +249,79 @@ export function StoragePage() {
     }
   }, [handleDelete, handleRenameSubmit])
 
-  // ── drag & drop ────────────────────────────────────────────────────────────
+  // ── move via drag and drop ───────────────────────────────────────────────
+
+  // A move is valid unless the item is dropped on itself or back into the
+  // folder it already lives in. Siblings can never be descendants of each
+  // other, and breadcrumb targets are ancestors, so no cycle is reachable from
+  // this UI — the backend still enforces it as a backstop.
+  const canDropOn = useCallback((node, targetId) => {
+    if (!node) return false
+    if (node.id === targetId) return false
+    if ((node.parentId ?? null) === (targetId ?? null)) return false
+    return true
+  }, [])
+
+  const handleMove = useCallback(async (node, targetId, targetName) => {
+    if (!canDropOn(node, targetId)) return
+    try {
+      await move(node.id, targetId)
+      notify.actionSucceeded('Movido', `“${node.name}” → ${targetName}.`)
+    } catch {
+      notify.actionFailed('No se pudo mover', 'Quizá ya existe un elemento con ese nombre en el destino.')
+    }
+  }, [canDropOn, move])
+
+  // Drop-zone handlers shared by folder cards/rows and breadcrumb crumbs.
+  // targetId null means the Drive root.
+  const buildDropZone = useCallback((targetId, targetName) => ({
+    onDragOver: (event) => {
+      const node = dragNodeRef.current
+      if (!node || !canDropOn(node, targetId)) return
+      event.preventDefault()
+      event.stopPropagation()
+      event.dataTransfer.dropEffect = 'move'
+      setDropTargetId(targetId ?? 'root')
+    },
+    onDragLeave: (event) => {
+      event.stopPropagation()
+      setDropTargetId((current) => (current === (targetId ?? 'root') ? null : current))
+    },
+    onDrop: (event) => {
+      const node = dragNodeRef.current
+      if (!node) return
+      event.preventDefault()
+      event.stopPropagation()
+      setDropTargetId(null)
+      handleMove(node, targetId, targetName)
+    },
+  }), [canDropOn, handleMove])
+
+  const buildDnd = useCallback((node) => {
+    const isDir = node.type === 'dir'
+    return {
+      isDragging: draggingId === node.id,
+      isDropTarget: isDir && dropTargetId === node.id,
+      itemProps: {
+        draggable: renamingId !== node.id,
+        onDragStart: (event) => {
+          dragNodeRef.current = node
+          setDraggingId(node.id)
+          event.dataTransfer.effectAllowed = 'move'
+          event.dataTransfer.setData('application/x-homelab-node', node.id)
+          event.dataTransfer.setData('text/plain', node.name)
+        },
+        onDragEnd: () => {
+          dragNodeRef.current = null
+          setDraggingId(null)
+          setDropTargetId(null)
+        },
+      },
+      folderDropProps: isDir ? buildDropZone(node.id, node.name) : {},
+    }
+  }, [draggingId, dropTargetId, renamingId, buildDropZone])
+
+  // ── drag & drop (file upload from OS) ───────────────────────────────────────
 
   const handleDrop = useCallback((event) => {
     event.preventDefault()
@@ -263,13 +355,25 @@ export function StoragePage() {
     >
       <header className="drive-toolbar">
         <nav className="drive-breadcrumb" aria-label="Ruta">
-          <button type="button" className="crumb crumb-home" onClick={() => open(null)} disabled={!currentId}>
+          <button
+            type="button"
+            className={`crumb crumb-home ${dropTargetId === 'root' ? 'dnd-drop-target' : ''}`}
+            onClick={() => open(null)}
+            disabled={!currentId}
+            {...buildDropZone(null, 'Drive')}
+          >
             <span aria-hidden="true">⛁</span> Drive
           </button>
           {breadcrumb.map((crumb) => (
             <span key={crumb.id} className="crumb-wrap">
               <span className="crumb-sep" aria-hidden="true">›</span>
-              <button type="button" className="crumb" onClick={() => open(crumb.id)} disabled={crumb.id === currentId}>
+              <button
+                type="button"
+                className={`crumb ${dropTargetId === crumb.id ? 'dnd-drop-target' : ''}`}
+                onClick={() => open(crumb.id)}
+                disabled={crumb.id === currentId}
+                {...buildDropZone(crumb.id, crumb.name)}
+              >
                 {crumb.name}
               </button>
             </span>
@@ -338,7 +442,7 @@ export function StoragePage() {
         ) : view === 'grid' ? (
           <div className="drive-grid">
             {visibleItems.map((node) => (
-              <GridCard key={node.id} node={node} isRenaming={renamingId === node.id} onActivate={handleActivate} menu={buildMenu(node)} />
+              <GridCard key={node.id} node={node} isRenaming={renamingId === node.id} onActivate={handleActivate} menu={buildMenu(node)} dnd={buildDnd(node)} />
             ))}
           </div>
         ) : (
@@ -350,7 +454,7 @@ export function StoragePage() {
               <span />
             </div>
             {visibleItems.map((node) => (
-              <ListRow key={node.id} node={node} isRenaming={renamingId === node.id} onActivate={handleActivate} menu={buildMenu(node)} />
+              <ListRow key={node.id} node={node} isRenaming={renamingId === node.id} onActivate={handleActivate} menu={buildMenu(node)} dnd={buildDnd(node)} />
             ))}
           </div>
         )}

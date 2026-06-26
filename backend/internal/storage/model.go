@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 )
@@ -64,9 +65,37 @@ type CreateFolderRequest struct {
 }
 
 // UpdateRequest renames and/or moves a node. A nil field leaves that attribute
-// untouched; ParentID is wrapped so "move to root" (explicit null) can be told
-// apart from "do not move" (field absent).
+// untouched; ParentID is double-wrapped so "move to root" (explicit null) can
+// be told apart from "do not move" (field absent):
+//
+//	ParentID == nil                 -> field absent: keep current parent
+//	ParentID != nil, *ParentID == nil -> explicit null: move to root
+//	ParentID != nil, *ParentID != nil -> move under that folder id
 type UpdateRequest struct {
-	Name     *string  `json:"name"`
-	ParentID **string `json:"parentId"`
+	Name     *string
+	ParentID **string
+}
+
+// UnmarshalJSON distinguishes an absent "parentId" key from an explicit null.
+// encoding/json collapses both onto a nil pointer for a plain **string field,
+// so we decode the key as RawMessage and inspect whether it was present.
+func (r *UpdateRequest) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Name     *string         `json:"name"`
+		ParentID json.RawMessage `json:"parentId"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	r.Name = raw.Name
+	r.ParentID = nil
+	if raw.ParentID != nil { // key was present (either null or a string)
+		var inner *string
+		if err := json.Unmarshal(raw.ParentID, &inner); err != nil {
+			return err
+		}
+		r.ParentID = &inner
+	}
+	return nil
 }

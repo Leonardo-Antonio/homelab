@@ -429,6 +429,44 @@
   width: 100%;
 }
 
+/* ── Move via drag & drop ────────────────────────────────────────────────── */
+
+.grid-card,
+.list-row {
+  cursor: grab;
+}
+
+.grid-card:active,
+.list-row:active {
+  cursor: grabbing;
+}
+
+/* The item currently being dragged fades back. */
+.dnd-dragging {
+  opacity: 0.4;
+}
+
+/* Folders / breadcrumb crumbs light up when a valid drop is hovering them. */
+.grid-card.dnd-drop-target {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(11, 107, 95, 0.25);
+  transform: translateY(-1px);
+}
+
+.grid-card.dnd-drop-target .grid-card-thumb {
+  background: var(--accent-soft);
+}
+
+.list-row.dnd-drop-target {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.crumb.dnd-drop-target {
+  background: var(--accent);
+  color: #fffefa;
+}
+
 /* ── Drag & drop overlay ─────────────────────────────────────────────────── */
 
 .drive-dropzone {

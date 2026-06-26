@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"image"
 	"image/color"
 	"image/png"
@@ -166,6 +167,67 @@ func TestCreateFolderRejectsDuplicateName(t *testing.T) {
 	_, err := svc.CreateFolder(ctx, CreateFolderRequest{Name: "shared"})
 	if err != ErrNameConflict {
 		t.Fatalf("err = %v, want ErrNameConflict", err)
+	}
+}
+
+func TestMoveFileToRoot(t *testing.T) {
+	svc, _ := newTestService(t)
+	ctx := context.Background()
+
+	folder, _ := svc.CreateFolder(ctx, CreateFolderRequest{Name: "box"})
+	file := upload(t, svc, &folder.ID, "doc.txt", "data")
+
+	// Explicit null parentId must move the file back to the root.
+	var req UpdateRequest
+	if err := json.Unmarshal([]byte(`{"parentId":null}`), &req); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	moved, err := svc.Update(ctx, file.ID, req)
+	if err != nil {
+		t.Fatalf("move to root: %v", err)
+	}
+	if moved.ParentID != nil {
+		t.Fatalf("parentId = %v, want nil (root)", *moved.ParentID)
+	}
+
+	root, _ := svc.List(ctx, nil)
+	names := map[string]bool{}
+	for _, n := range root.Items {
+		names[n.Name] = true
+	}
+	if !names["doc.txt"] {
+		t.Fatalf("file not at root after move: %+v", root.Items)
+	}
+}
+
+func TestUpdateRequestDistinguishesAbsentFromNullParent(t *testing.T) {
+	cases := []struct {
+		body          string
+		wantOuterNil  bool // ParentID == nil  (absent: keep current)
+		wantInnerNil  bool // *ParentID == nil (explicit null: root)
+		wantInnerText string
+	}{
+		{`{"name":"x"}`, true, false, ""},        // absent
+		{`{"parentId":null}`, false, true, ""},   // explicit null
+		{`{"parentId":"abc"}`, false, false, "abc"}, // a folder id
+	}
+	for _, tc := range cases {
+		var req UpdateRequest
+		if err := json.Unmarshal([]byte(tc.body), &req); err != nil {
+			t.Fatalf("%s: %v", tc.body, err)
+		}
+		if (req.ParentID == nil) != tc.wantOuterNil {
+			t.Fatalf("%s: outer nil = %v, want %v", tc.body, req.ParentID == nil, tc.wantOuterNil)
+		}
+		if tc.wantOuterNil {
+			continue
+		}
+		if (*req.ParentID == nil) != tc.wantInnerNil {
+			t.Fatalf("%s: inner nil = %v, want %v", tc.body, *req.ParentID == nil, tc.wantInnerNil)
+		}
+		if !tc.wantInnerNil && **req.ParentID != tc.wantInnerText {
+			t.Fatalf("%s: inner = %q, want %q", tc.body, **req.ParentID, tc.wantInnerText)
+		}
 	}
 }
 
