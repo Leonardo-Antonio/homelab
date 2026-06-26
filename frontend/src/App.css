@@ -2,6 +2,11 @@
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
   min-height: 100svh;
+  transition: grid-template-columns 200ms ease;
+}
+
+.app-shell-collapsed {
+  grid-template-columns: 76px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -72,15 +77,66 @@
   text-align: left;
 }
 
-.nav-item span {
+.nav-item span[aria-hidden='true'] {
   color: #f0c15a;
+  flex: 0 0 20px;
   font-weight: 800;
+  text-align: center;
 }
 
 .nav-item-active {
   background: rgba(255, 254, 250, 0.08);
   border-color: rgba(255, 254, 250, 0.12);
   color: #fffefa;
+}
+
+.sidebar-toggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(255, 254, 250, 0.12);
+  border-radius: var(--radius);
+  color: rgba(255, 254, 250, 0.74);
+  display: flex;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 254, 250, 0.06);
+  color: #fffefa;
+}
+
+.sidebar-toggle span[aria-hidden='true'] {
+  color: #f0c15a;
+  flex: 0 0 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ── Collapsed state ─────────────────────────────────────────────────────── */
+
+.app-shell-collapsed .sidebar {
+  padding: 28px 14px;
+  justify-items: center;
+}
+
+.app-shell-collapsed .brand {
+  justify-content: center;
+}
+
+.app-shell-collapsed .brand-text,
+.app-shell-collapsed .nav-item-label,
+.app-shell-collapsed .sidebar-toggle-label {
+  display: none;
+}
+
+.app-shell-collapsed .nav-item,
+.app-shell-collapsed .sidebar-toggle {
+  gap: 0;
+  justify-content: center;
+  padding: 0;
+  width: 44px;
 }
 
 .main-content {
