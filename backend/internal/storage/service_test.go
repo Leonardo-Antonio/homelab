@@ -1,7 +1,11 @@
 package storage
 
 import (
+	"bytes"
 	"context"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
 	"os"
 	"path/filepath"
@@ -192,15 +196,84 @@ func TestRejectsPathTraversalName(t *testing.T) {
 	}
 }
 
+func TestThumbnailGeneratedAndCleanedUp(t *testing.T) {
+	svc, root := newTestService(t)
+	ctx := context.Background()
+
+	// A 600x400 PNG — larger than thumbMaxEdge, so it must be downscaled.
+	var buf bytes.Buffer
+	img := image.NewRGBA(image.Rect(0, 0, 600, 400))
+	for x := 0; x < 600; x++ {
+		for y := 0; y < 400; y++ {
+			img.Set(x, y, color.RGBA{uint8(x % 256), uint8(y % 256), 120, 255})
+		}
+	}
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("encode png: %v", err)
+	}
+
+	node, err := svc.CreateFile(ctx, nil, "pic.png", "image/png", bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		t.Fatalf("upload image: %v", err)
+	}
+	if node.ThumbnailURL == "" {
+		t.Fatal("image file should expose a thumbnail URL")
+	}
+
+	f, err := svc.OpenThumbnail(ctx, node.ID)
+	if err != nil {
+		t.Fatalf("open thumbnail: %v", err)
+	}
+	thumb, _, err := image.Decode(f)
+	f.Close()
+	if err != nil {
+		t.Fatalf("decode thumbnail: %v", err)
+	}
+	if b := thumb.Bounds(); b.Dx() > thumbMaxEdge || b.Dy() > thumbMaxEdge {
+		t.Fatalf("thumbnail not downscaled: %dx%d", b.Dx(), b.Dy())
+	}
+	if countThumbFiles(t, root) != 1 {
+		t.Fatalf("expected exactly one cached thumbnail")
+	}
+
+	// Deleting the file must reclaim both the blob and its thumbnail.
+	if err := svc.Delete(ctx, node.ID); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	if countThumbFiles(t, root) != 0 {
+		t.Fatalf("thumbnail not cleaned up after delete")
+	}
+}
+
+func TestThumbnailRejectsNonImage(t *testing.T) {
+	svc, _ := newTestService(t)
+	node := upload(t, svc, nil, "notes.txt", "just text")
+	if node.ThumbnailURL != "" {
+		t.Fatal("text file should not advertise a thumbnail")
+	}
+	if _, err := svc.OpenThumbnail(context.Background(), node.ID); err != ErrNotAFile {
+		t.Fatalf("err = %v, want ErrNotAFile", err)
+	}
+}
+
 // ── helpers ─────────────────────────────────────────────────────────────────
 
 func ptrPtr(p *string) **string { return &p }
 
+func countThumbFiles(t *testing.T, root string) int {
+	t.Helper()
+	return countFilesUnder(t, filepath.Join(root, "storage", "thumbs"))
+}
+
 func countBlobFiles(t *testing.T, root string) int {
 	t.Helper()
+	return countFilesUnder(t, filepath.Join(root, "storage", "blobs"))
+}
+
+func countFilesUnder(t *testing.T, dir string) int {
+	t.Helper()
 	count := 0
-	blobsDir := filepath.Join(root, "storage", "blobs")
-	err := filepath.Walk(blobsDir, func(_ string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(_ string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

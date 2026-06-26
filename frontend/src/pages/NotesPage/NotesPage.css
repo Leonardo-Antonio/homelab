@@ -490,8 +490,8 @@
 
 @media (max-width: 900px) {
   .notes-page {
-    margin: -24px -18px;
-    height: 100svh;
+    margin: -24px -18px 0;
+    height: calc(100svh - var(--bottom-nav-h));
   }
 
   .notes-tree {
@@ -510,7 +510,7 @@
 
 @media (max-width: 640px) {
   .notes-page {
-    margin: -18px -14px;
+    margin: -18px -14px 0;
     flex-direction: column;
   }
 

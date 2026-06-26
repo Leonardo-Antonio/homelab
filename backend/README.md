@@ -59,7 +59,8 @@ GET    /api/v1/storage/nodes?parentId={id}      # list a folder (omit parentId f
 GET    /api/v1/storage/nodes/{id}               # get a single node
 POST   /api/v1/storage/folders                  # { "parentId": null, "name": "Docs" }
 POST   /api/v1/storage/files                    # multipart: parentId, file
-GET    /api/v1/storage/files/{id}/content       # download (supports Range; ?download=1 forces attachment)
+GET    /api/v1/storage/files/{id}/content       # stream inline (supports Range; ?download=1 forces attachment)
+GET    /api/v1/storage/files/{id}/thumbnail      # small cached JPEG preview (image files only)
 PATCH  /api/v1/storage/nodes/{id}               # rename and/or move: { "name": "...", "parentId": "..." }
 DELETE /api/v1/storage/nodes/{id}               # delete a file, or a folder and its whole subtree
 ```
@@ -77,3 +78,8 @@ Reliability guarantees:
 - **Startup sweep** — any blob left unreferenced by a crash is reclaimed on boot.
 
 Single files up to 5 GiB are accepted (`MaxUploadBytes`).
+
+Image files also expose a `thumbnailUrl`. Thumbnails are downscaled JPEGs
+(longest edge 360px) generated lazily on first request and cached on disk keyed
+by the blob digest, so a grid of previews loads without fetching full images.
+They are written atomically and reclaimed together with their blob.

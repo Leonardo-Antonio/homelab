@@ -39,6 +39,8 @@ type Node struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 	// DownloadURL is set for files so the client can fetch the content.
 	DownloadURL string `json:"downloadUrl,omitempty"`
+	// ThumbnailURL is set for image files that can be previewed cheaply.
+	ThumbnailURL string `json:"thumbnailUrl,omitempty"`
 	// blobID stays server-side; it is never serialized to clients.
 	blobID string `json:"-"`
 }

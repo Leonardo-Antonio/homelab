@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"homelab/backend/internal/httpapi"
 )
@@ -22,6 +23,7 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/storage/folders", h.createFolder)
 	mux.HandleFunc("POST /api/v1/storage/files", h.uploadFile)
 	mux.HandleFunc("GET /api/v1/storage/files/{id}/content", h.download)
+	mux.HandleFunc("GET /api/v1/storage/files/{id}/thumbnail", h.thumbnail)
 	mux.HandleFunc("PATCH /api/v1/storage/nodes/{id}", h.update)
 	mux.HandleFunc("DELETE /api/v1/storage/nodes/{id}", h.delete)
 }
@@ -120,6 +122,28 @@ func (h *Handler) download(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, max-age=3600")
 	// ServeContent handles Range, If-Modified-Since and Content-Length.
 	http.ServeContent(w, r, node.Name, node.UpdatedAt, file)
+}
+
+func (h *Handler) thumbnail(w http.ResponseWriter, r *http.Request) {
+	file, err := h.service.OpenThumbnail(r.Context(), r.PathValue("id"))
+	switch {
+	case errors.Is(err, ErrNotFound) || errors.Is(err, ErrNotAFile):
+		httpapi.WriteError(w, http.StatusNotFound, "NotFound", "Thumbnail not available.", nil)
+		return
+	case err != nil:
+		httpapi.WriteError(w, http.StatusInternalServerError, "InternalServerError", "Could not build thumbnail.", nil)
+		return
+	}
+	defer file.Close()
+
+	info, statErr := file.Stat()
+	modTime := time.Time{}
+	if statErr == nil {
+		modTime = info.ModTime()
+	}
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Cache-Control", "private, max-age=86400")
+	http.ServeContent(w, r, "thumbnail.jpg", modTime, file)
 }
 
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {

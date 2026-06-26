@@ -84,6 +84,31 @@ export function uploadFile({ parentId = null, file, onProgress } = {}) {
   })
 }
 
+// downloadUrl forces a browser download (Content-Disposition: attachment).
 export function downloadUrl(node) {
   return `${API_BASE_URL}${node.downloadUrl}?download=1`
+}
+
+// contentUrl serves the file inline — used by <img>, <video>, <iframe>, etc.
+export function contentUrl(node) {
+  return node.downloadUrl ? `${API_BASE_URL}${node.downloadUrl}` : ''
+}
+
+// thumbUrl is a small cached preview for image files (empty for everything else).
+export function thumbUrl(node) {
+  return node.thumbnailUrl ? `${API_BASE_URL}${node.thumbnailUrl}` : ''
+}
+
+// fetchTextPreview pulls only the first `maxBytes` of a file via a Range
+// request, so previewing a huge log never downloads the whole thing.
+export async function fetchTextPreview(node, maxBytes = 256 * 1024) {
+  const response = await fetch(`${API_BASE_URL}${node.downloadUrl}`, {
+    headers: { Range: `bytes=0-${maxBytes - 1}` },
+  })
+  if (!response.ok && response.status !== 206) {
+    throw new Error('No se pudo leer el archivo.')
+  }
+  const text = await response.text()
+  const truncated = (node.sizeBytes ?? 0) > maxBytes
+  return { text, truncated }
 }

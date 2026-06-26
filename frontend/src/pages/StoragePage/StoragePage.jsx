@@ -1,88 +1,124 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '../../components/Button.jsx'
 import { EmptyState } from '../../components/EmptyState.jsx'
 import { useStorage } from '../../hooks/useStorage.js'
-import { downloadUrl } from '../../services/storageApi.js'
+import { downloadUrl, thumbUrl } from '../../services/storageApi.js'
 import { notify } from '../../services/notifications.js'
+import { fileKind, formatDate, formatSize, iconFor } from '../../utils/fileKinds.js'
+import { FilePreview } from './FilePreview.jsx'
 import './StoragePage.css'
 
-const dateFormatter = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' })
+const VIEW_KEY = 'homelab.drive.view'
+const SORTS = {
+  name: (a, b) => a.name.localeCompare(b.name, 'es', { numeric: true }),
+  size: (a, b) => (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0),
+  date: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+}
 
-function formatSize(bytes) {
-  if (!bytes) return '—'
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  let value = bytes
-  let unit = 0
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024
-    unit += 1
+function readView() {
+  if (typeof window === 'undefined') return 'grid'
+  return window.localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'grid'
+}
+
+// ─── Thumbnail / icon tile ────────────────────────────────────────────────────
+
+function Thumb({ node, size }) {
+  const [failed, setFailed] = useState(false)
+  const url = thumbUrl(node)
+  const showImage = url && !failed && fileKind(node) === 'image'
+
+  if (showImage) {
+    return (
+      <img
+        className={`thumb thumb-${size}`}
+        src={url}
+        alt=""
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+    )
   }
-  return `${value >= 10 || unit === 0 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`
+  return (
+    <span className={`thumb thumb-icon thumb-${size}`} aria-hidden="true">
+      {iconFor(node)}
+    </span>
+  )
 }
 
-function iconForFile(name, contentType = '') {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  if (contentType.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return '🖼'
-  if (contentType.startsWith('video/') || ['mp4', 'mkv', 'mov', 'webm'].includes(ext)) return '🎬'
-  if (contentType.startsWith('audio/') || ['mp3', 'wav', 'flac', 'ogg'].includes(ext)) return '🎵'
-  if (['pdf'].includes(ext)) return '📕'
-  if (['zip', 'tar', 'gz', 'rar', '7z'].includes(ext)) return '🗜'
-  if (['doc', 'docx', 'txt', 'md', 'rtf'].includes(ext)) return '📄'
-  if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊'
-  if (['js', 'ts', 'jsx', 'tsx', 'go', 'py', 'rs', 'json', 'html', 'css', 'sh'].includes(ext)) return '🧩'
-  return '📄'
-}
+// ─── Inline rename input ──────────────────────────────────────────────────────
 
-// ─── Item row ─────────────────────────────────────────────────────────────────
-
-function StorageItem({ node, renaming, onOpen, onStartRename, onRenameSubmit, onRenameCancel, onDownload, onDelete }) {
-  const isDir = node.type === 'dir'
-  const inputRef = useRef(null)
-
+function RenameInput({ defaultValue, onSubmit, onCancel }) {
+  const ref = useRef(null)
   useEffect(() => {
-    if (renaming) inputRef.current?.select()
-  }, [renaming])
-
-  function handleKey(event) {
-    if (event.key === 'Enter') onRenameSubmit(node.id, event.target.value.trim())
-    if (event.key === 'Escape') onRenameCancel()
-  }
+    const input = ref.current
+    if (!input) return
+    input.focus()
+    const dot = defaultValue.lastIndexOf('.')
+    input.setSelectionRange(0, dot > 0 ? dot : defaultValue.length)
+  }, [defaultValue])
 
   return (
-    <div className={`storage-item ${isDir ? 'storage-item-dir' : ''}`}>
-      <button
-        type="button"
-        className="storage-item-main"
-        onDoubleClick={() => isDir && onOpen(node.id)}
-        onClick={() => isDir && onOpen(node.id)}
-      >
-        <span className="storage-item-icon" aria-hidden="true">
-          {isDir ? '📁' : iconForFile(node.name, node.contentType)}
+    <input
+      ref={ref}
+      className="rename-input"
+      defaultValue={defaultValue}
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+      onBlur={(event) => onSubmit(event.target.value.trim())}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') onSubmit(event.target.value.trim())
+        if (event.key === 'Escape') onCancel()
+      }}
+    />
+  )
+}
+
+// ─── Grid card ────────────────────────────────────────────────────────────────
+
+function GridCard({ node, isRenaming, onActivate, menu }) {
+  const isDir = node.type === 'dir'
+  return (
+    <div
+      className={`grid-card ${isDir ? 'grid-card-dir' : ''}`}
+      onDoubleClick={() => onActivate(node)}
+      tabIndex={0}
+      onKeyDown={(event) => event.key === 'Enter' && onActivate(node)}
+    >
+      <button type="button" className="grid-card-body" onClick={() => onActivate(node)}>
+        <span className="grid-card-thumb">
+          <Thumb node={node} size="lg" />
         </span>
-        {renaming ? (
-          <input
-            ref={inputRef}
-            className="storage-rename-input"
-            defaultValue={node.name}
-            onClick={(event) => event.stopPropagation()}
-            onBlur={(event) => onRenameSubmit(node.id, event.target.value.trim())}
-            onKeyDown={handleKey}
-          />
+      </button>
+      <div className="grid-card-foot">
+        {isRenaming ? (
+          <RenameInput {...menu.renameProps} />
         ) : (
-          <span className="storage-item-name" title={node.name}>{node.name}</span>
+          <span className="grid-card-name" title={node.name}>{node.name}</span>
+        )}
+        <span className="grid-card-meta">{isDir ? 'Carpeta' : formatSize(node.sizeBytes)}</span>
+      </div>
+      {menu.element}
+    </div>
+  )
+}
+
+// ─── List row ─────────────────────────────────────────────────────────────────
+
+function ListRow({ node, isRenaming, onActivate, menu }) {
+  const isDir = node.type === 'dir'
+  return (
+    <div className="list-row" onDoubleClick={() => onActivate(node)}>
+      <button type="button" className="list-row-main" onClick={() => onActivate(node)}>
+        <Thumb node={node} size="sm" />
+        {isRenaming ? (
+          <RenameInput {...menu.renameProps} />
+        ) : (
+          <span className="list-row-name" title={node.name}>{node.name}</span>
         )}
       </button>
-
-      <span className="storage-item-meta storage-item-size">{isDir ? 'Carpeta' : formatSize(node.sizeBytes)}</span>
-      <span className="storage-item-meta storage-item-date">{dateFormatter.format(new Date(node.updatedAt))}</span>
-
-      <div className="storage-item-actions">
-        {!isDir && (
-          <a className="storage-action" href={onDownload(node)} title="Descargar" download>↓</a>
-        )}
-        <button type="button" className="storage-action" title="Renombrar" onClick={() => onStartRename(node.id)}>✎</button>
-        <button type="button" className="storage-action storage-action-danger" title="Eliminar" onClick={() => onDelete(node)}>✕</button>
-      </div>
+      <span className="list-cell list-cell-size">{isDir ? 'Carpeta' : formatSize(node.sizeBytes)}</span>
+      <span className="list-cell list-cell-date">{formatDate(node.updatedAt)}</span>
+      <div className="list-cell list-cell-actions">{menu.inlineActions}</div>
     </div>
   )
 }
@@ -91,43 +127,53 @@ function StorageItem({ node, renaming, onOpen, onStartRename, onRenameSubmit, on
 
 export function StoragePage() {
   const { currentId, items, breadcrumb, isLoading, error, uploads, open, addFolder, rename, remove, upload } = useStorage()
+  const [view, setView] = useState(readView)
+  const [sort, setSort] = useState('name')
+  const [query, setQuery] = useState('')
   const [renamingId, setRenamingId] = useState(null)
+  const [previewId, setPreviewId] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef(null)
   const dragDepth = useRef(0)
 
   useEffect(() => {
+    window.localStorage.setItem(VIEW_KEY, view)
+  }, [view])
+
+  useEffect(() => {
     if (error) notify.backendUnavailable(error)
   }, [error])
+
+  // Folders always first, then the chosen sort, then an optional name filter.
+  const visibleItems = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    const filtered = needle ? items.filter((n) => n.name.toLowerCase().includes(needle)) : items
+    return [...filtered].sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'dir' ? -1 : 1
+      return SORTS[sort](a, b)
+    })
+  }, [items, query, sort])
+
+  const fileList = useMemo(() => visibleItems.filter((n) => n.type === 'file'), [visibleItems])
+  const previewIndex = fileList.findIndex((n) => n.id === previewId)
+  const previewNode = previewIndex >= 0 ? fileList[previewIndex] : null
+
+  // ── actions ──────────────────────────────────────────────────────────────
 
   const handleUpload = useCallback(async (files) => {
     if (!files || files.length === 0) return
     try {
       await upload(files)
-      notify.actionSucceeded?.('Subida completa', 'Tus archivos ya están guardados.')
+      notify.actionSucceeded('Subida completa', 'Tus archivos ya están guardados en el servidor.')
     } catch (uploadError) {
       notify.actionFailed('No se pudo subir', uploadError.message)
     }
   }, [upload])
 
-  const handleDrop = useCallback((event) => {
-    event.preventDefault()
-    dragDepth.current = 0
-    setIsDragging(false)
-    handleUpload(event.dataTransfer.files)
-  }, [handleUpload])
-
-  const handleDragEnter = useCallback((event) => {
-    event.preventDefault()
-    dragDepth.current += 1
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((event) => {
-    event.preventDefault()
-    dragDepth.current -= 1
-    if (dragDepth.current <= 0) setIsDragging(false)
-  }, [])
+  const handleActivate = useCallback((node) => {
+    if (node.type === 'dir') open(node.id)
+    else setPreviewId(node.id)
+  }, [open])
 
   const handleNewFolder = useCallback(async () => {
     const name = window.prompt('Nombre de la carpeta', 'Nueva carpeta')
@@ -154,10 +200,58 @@ export function StoragePage() {
     if (!window.confirm(`¿Eliminar ${label} "${node.name}"? Esta acción no se puede deshacer.`)) return
     try {
       await remove(node.id)
+      setPreviewId((current) => (current === node.id ? null : current))
     } catch {
       notify.actionFailed('No se pudo eliminar', 'Revisa si el backend está disponible.')
     }
   }, [remove])
+
+  // Builds the per-item menu/actions shared by both views.
+  const buildMenu = useCallback((node) => {
+    const renameProps = {
+      defaultValue: node.name,
+      onSubmit: (name) => handleRenameSubmit(node.id, name),
+      onCancel: () => setRenamingId(null),
+    }
+    const inlineActions = (
+      <>
+        {node.type === 'file' && (
+          <a className="row-action" href={downloadUrl(node)} download title="Descargar" onClick={(e) => e.stopPropagation()}>↓</a>
+        )}
+        <button type="button" className="row-action" title="Renombrar" onClick={(e) => { e.stopPropagation(); setRenamingId(node.id) }}>✎</button>
+        <button type="button" className="row-action row-action-danger" title="Eliminar" onClick={(e) => { e.stopPropagation(); handleDelete(node) }}>✕</button>
+      </>
+    )
+    return {
+      renameProps,
+      inlineActions,
+      element: <div className="grid-card-actions" onClick={(e) => e.stopPropagation()}>{inlineActions}</div>,
+    }
+  }, [handleDelete, handleRenameSubmit])
+
+  // ── drag & drop ────────────────────────────────────────────────────────────
+
+  const handleDrop = useCallback((event) => {
+    event.preventDefault()
+    dragDepth.current = 0
+    setIsDragging(false)
+    handleUpload(event.dataTransfer.files)
+  }, [handleUpload])
+
+  const handleDragEnter = useCallback((event) => {
+    if (![...event.dataTransfer.types].includes('Files')) return
+    event.preventDefault()
+    dragDepth.current += 1
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((event) => {
+    event.preventDefault()
+    dragDepth.current -= 1
+    if (dragDepth.current <= 0) setIsDragging(false)
+  }, [])
+
+  // ── render ──────────────────────────────────────────────────────────────────
 
   return (
     <div
@@ -167,14 +261,45 @@ export function StoragePage() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <header className="storage-header">
-        <div className="storage-titles">
-          <h1>Drive</h1>
-          <p>Tu almacenamiento personal, guardado de forma segura en tu servidor.</p>
-        </div>
-        <div className="storage-actions-bar">
+      <header className="drive-toolbar">
+        <nav className="drive-breadcrumb" aria-label="Ruta">
+          <button type="button" className="crumb crumb-home" onClick={() => open(null)} disabled={!currentId}>
+            <span aria-hidden="true">⛁</span> Drive
+          </button>
+          {breadcrumb.map((crumb) => (
+            <span key={crumb.id} className="crumb-wrap">
+              <span className="crumb-sep" aria-hidden="true">›</span>
+              <button type="button" className="crumb" onClick={() => open(crumb.id)} disabled={crumb.id === currentId}>
+                {crumb.name}
+              </button>
+            </span>
+          ))}
+        </nav>
+
+        <div className="drive-toolbar-actions">
+          <label className="drive-search">
+            <span aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              placeholder="Buscar aquí…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+
+          <select className="drive-sort" value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Ordenar">
+            <option value="name">Nombre</option>
+            <option value="date">Recientes</option>
+            <option value="size">Tamaño</option>
+          </select>
+
+          <div className="view-toggle" role="group" aria-label="Vista">
+            <button type="button" className={`view-btn ${view === 'grid' ? 'view-btn-active' : ''}`} onClick={() => setView('grid')} title="Cuadrícula">▦</button>
+            <button type="button" className={`view-btn ${view === 'list' ? 'view-btn-active' : ''}`} onClick={() => setView('list')} title="Lista">≣</button>
+          </div>
+
           <Button variant="ghost" onClick={handleNewFolder}>+ Carpeta</Button>
-          <Button variant="primary" onClick={() => fileInputRef.current?.click()}>↑ Subir archivos</Button>
+          <Button variant="primary" onClick={() => fileInputRef.current?.click()}>↑ Subir</Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -188,84 +313,67 @@ export function StoragePage() {
         </div>
       </header>
 
-      <nav className="storage-breadcrumb" aria-label="Ruta">
-        <button type="button" className="crumb" onClick={() => open(null)} disabled={!currentId}>
-          🏠 Inicio
-        </button>
-        {breadcrumb.map((crumb) => (
-          <span key={crumb.id} className="crumb-wrap">
-            <span className="crumb-sep" aria-hidden="true">/</span>
-            <button
-              type="button"
-              className="crumb"
-              onClick={() => open(crumb.id)}
-              disabled={crumb.id === currentId}
-            >
-              {crumb.name}
-            </button>
-          </span>
-        ))}
-      </nav>
-
       {uploads.length > 0 && (
-        <ul className="storage-uploads" aria-label="Subidas en curso">
+        <ul className="upload-tray" aria-label="Subidas en curso">
           {uploads.map((entry) => (
             <li key={entry.key} className={`upload-row upload-${entry.status}`}>
               <span className="upload-name" title={entry.name}>{entry.name}</span>
-              <span className="upload-bar">
-                <span className="upload-bar-fill" style={{ width: `${Math.round(entry.progress * 100)}%` }} />
-              </span>
-              <span className="upload-pct">
-                {entry.status === 'error' ? '⚠' : `${Math.round(entry.progress * 100)}%`}
-              </span>
+              <span className="upload-bar"><span className="upload-bar-fill" style={{ width: `${Math.round(entry.progress * 100)}%` }} /></span>
+              <span className="upload-pct">{entry.status === 'error' ? '⚠' : `${Math.round(entry.progress * 100)}%`}</span>
             </li>
           ))}
         </ul>
       )}
 
-      <section className="storage-panel">
+      <section className="drive-surface">
         {isLoading ? (
-          <div className="storage-loading" aria-label="Cargando">
-            <span /><span /><span />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="storage-empty-wrap">
+          <div className="drive-loading" aria-label="Cargando"><span /><span /><span /></div>
+        ) : visibleItems.length === 0 ? (
+          <div className="drive-empty">
             <EmptyState
-              title="Esta carpeta está vacía"
-              description="Arrastra archivos aquí o usa “Subir archivos” para empezar."
+              title={query ? 'Sin resultados' : 'Esta carpeta está vacía'}
+              description={query ? 'Prueba con otro término de búsqueda.' : 'Arrastra archivos aquí o usa “Subir” para empezar.'}
             />
           </div>
+        ) : view === 'grid' ? (
+          <div className="drive-grid">
+            {visibleItems.map((node) => (
+              <GridCard key={node.id} node={node} isRenaming={renamingId === node.id} onActivate={handleActivate} menu={buildMenu(node)} />
+            ))}
+          </div>
         ) : (
-          <div className="storage-list">
-            <div className="storage-list-head">
+          <div className="drive-list">
+            <div className="list-head">
               <span>Nombre</span>
-              <span className="storage-item-size">Tamaño</span>
-              <span className="storage-item-date">Modificado</span>
+              <span className="list-cell-size">Tamaño</span>
+              <span className="list-cell-date">Modificado</span>
               <span />
             </div>
-            {items.map((node) => (
-              <StorageItem
-                key={node.id}
-                node={node}
-                renaming={renamingId === node.id}
-                onOpen={open}
-                onStartRename={setRenamingId}
-                onRenameSubmit={handleRenameSubmit}
-                onRenameCancel={() => setRenamingId(null)}
-                onDownload={downloadUrl}
-                onDelete={handleDelete}
-              />
+            {visibleItems.map((node) => (
+              <ListRow key={node.id} node={node} isRenaming={renamingId === node.id} onActivate={handleActivate} menu={buildMenu(node)} />
             ))}
           </div>
         )}
       </section>
 
-      <div className="storage-dropzone-overlay" aria-hidden={!isDragging}>
-        <div className="storage-dropzone-card">
-          <span className="storage-dropzone-icon">⬇</span>
+      <div className="drive-dropzone" aria-hidden={!isDragging}>
+        <div className="drive-dropzone-card">
+          <span className="drive-dropzone-icon">⬇</span>
           <p>Suelta los archivos para subirlos aquí</p>
         </div>
       </div>
+
+      {previewNode && (
+        <FilePreview
+          node={previewNode}
+          hasPrev={previewIndex > 0}
+          hasNext={previewIndex < fileList.length - 1}
+          onPrev={() => setPreviewId(fileList[previewIndex - 1].id)}
+          onNext={() => setPreviewId(fileList[previewIndex + 1].id)}
+          onClose={() => setPreviewId(null)}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   )
 }

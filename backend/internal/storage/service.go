@@ -14,8 +14,9 @@ import (
 )
 
 type Service struct {
-	repo  *Repository
-	blobs *blobStore
+	repo   *Repository
+	blobs  *blobStore
+	thumbs *thumbnailer
 }
 
 func NewService(repo *Repository, storageDir string) (*Service, error) {
@@ -23,7 +24,11 @@ func NewService(repo *Repository, storageDir string) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &Service{repo: repo, blobs: blobs}
+	thumbs, err := newThumbnailer(storageDir)
+	if err != nil {
+		return nil, err
+	}
+	s := &Service{repo: repo, blobs: blobs, thumbs: thumbs}
 	s.sweepOrphans(context.Background())
 	return s, nil
 }
@@ -149,6 +154,31 @@ func (s *Service) OpenFile(ctx context.Context, id string) (Node, *os.File, erro
 	return node, f, nil
 }
 
+// OpenThumbnail returns a small cached JPEG preview for an image file,
+// generating it lazily on first request. Non-image files yield ErrNotAFile so
+// the handler can answer 404.
+func (s *Service) OpenThumbnail(ctx context.Context, id string) (*os.File, error) {
+	node, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if node.Type != TypeFile || node.blobID == "" || !thumbnailable(node.ContentType) {
+		return nil, ErrNotAFile
+	}
+	path, err := s.thumbs.Get(node.blobID, s.blobs.path(node.blobID), node.ContentType)
+	if err != nil {
+		if err == errNotThumbnailable {
+			return nil, ErrNotAFile
+		}
+		return nil, fmt.Errorf("thumbnail: %w", err)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open thumbnail: %w", err)
+	}
+	return f, nil
+}
+
 // Update renames and/or moves a node, guarding against moving a folder into
 // its own subtree.
 func (s *Service) Update(ctx context.Context, id string, req UpdateRequest) (Node, error) {
@@ -226,12 +256,18 @@ func (s *Service) removeBlobs(digests []string) {
 		if err := s.blobs.Remove(digest); err != nil {
 			slog.Error("storage blob removal failed", "digest", digest, "error", err)
 		}
+		// A blob and its derived thumbnail share a lifetime.
+		s.thumbs.Remove(digest)
 	}
 }
 
 func decorate(node *Node) {
-	if node.Type == TypeFile {
-		node.DownloadURL = "/api/v1/storage/files/" + node.ID + "/content"
+	if node.Type != TypeFile {
+		return
+	}
+	node.DownloadURL = "/api/v1/storage/files/" + node.ID + "/content"
+	if thumbnailable(node.ContentType) {
+		node.ThumbnailURL = "/api/v1/storage/files/" + node.ID + "/thumbnail"
 	}
 }
 

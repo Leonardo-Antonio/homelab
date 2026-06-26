@@ -5,6 +5,7 @@ go 1.26.4
 require (
 	github.com/coder/websocket v1.8.15
 	golang.org/x/crypto v0.53.0
+	golang.org/x/image v0.43.0
 	modernc.org/sqlite v1.53.0
 )
 

@@ -1,4 +1,8 @@
 .app-shell {
+  /* Height reserved for the mobile bottom nav; 0 on desktop where the nav is a
+     left sidebar. Pages inherit this and reserve bottom space so the fixed bar
+     never hides their content. */
+  --bottom-nav-h: 0px;
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
   min-height: 100svh;
@@ -243,45 +247,110 @@
   max-width: 34rem;
 }
 
+/* ── Tablet & mobile: sidebar becomes a fixed bottom tab bar ─────────────── */
+
 @media (max-width: 900px) {
-  .app-shell {
+  .app-shell,
+  .app-shell-collapsed {
+    --bottom-nav-h: calc(60px + env(safe-area-inset-bottom));
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    align-items: center;
+  .sidebar,
+  .app-shell-collapsed .sidebar {
+    align-content: initial;
+    align-items: stretch;
+    background: rgba(23, 23, 23, 0.96);
+    backdrop-filter: blur(12px);
+    border-right: none;
+    border-top: 1px solid rgba(255, 254, 250, 0.12);
+    bottom: 0;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.28);
     display: flex;
-    gap: 18px;
+    gap: 0;
     height: auto;
-    justify-content: space-between;
-    padding: 16px 18px;
-    position: static;
+    justify-items: stretch;
+    left: 0;
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    position: fixed;
+    right: 0;
+    top: auto;
+    z-index: 30;
   }
 
-  .nav-list {
+  /* The wordmark and the collapse toggle make no sense in a tab bar. */
+  .brand,
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .nav-list,
+  .app-shell-collapsed .nav-list {
     display: flex;
+    flex: 1;
+    gap: 2px;
+    justify-content: space-around;
   }
 
-  .nav-item {
-    min-height: 40px;
+  .nav-item,
+  .app-shell-collapsed .nav-item {
+    align-items: center;
+    border-radius: 12px;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: center;
+    min-height: 50px;
+    min-width: 0;
+    padding: 6px 2px;
+    width: auto;
+  }
+
+  .nav-item span[aria-hidden='true'] {
+    flex: none;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  /* Always show labels on mobile, even if the desktop state was "collapsed". */
+  .nav-item-label,
+  .app-shell-collapsed .nav-item-label {
+    display: block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-item-active {
+    background: rgba(240, 193, 90, 0.16);
+    border-color: transparent;
+    color: #fffefa;
   }
 
   .main-content {
     padding: 24px 18px;
+    padding-bottom: calc(var(--bottom-nav-h) + 18px);
   }
 }
 
 @media (max-width: 560px) {
-  .sidebar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .nav-item {
-    justify-content: center;
-  }
-
   .main-content {
-    padding: 18px 14px 28px;
+    padding: 18px 14px;
+    padding-bottom: calc(var(--bottom-nav-h) + 14px);
+  }
+
+  .nav-item span[aria-hidden='true'] {
+    font-size: 1.1rem;
+  }
+
+  .nav-item-label,
+  .app-shell-collapsed .nav-item-label {
+    font-size: 0.6rem;
   }
 }
