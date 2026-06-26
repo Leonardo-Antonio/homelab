@@ -5,6 +5,7 @@ import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { NotesPage } from './pages/NotesPage/NotesPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
+import { StoragePage } from './pages/StoragePage/StoragePage.jsx'
 import { STANDALONE_VIEW, TerminalPage } from './pages/TerminalPage/TerminalPage.jsx'
 import './App.css'
 
@@ -14,6 +15,7 @@ const pages = {
   camera: <CameraStreamPage />,
   terminal: <TerminalPage />,
   notes: <NotesPage />,
+  storage: <StoragePage />,
 }
 
 function getStandaloneView() {

@@ -8,6 +8,7 @@ services:
       HTTP_ADDR: :8080
       DATABASE_PATH: /app/data/homelab.db
       PHOTO_STORAGE_DIR: /app/data/photos
+      STORAGE_DIR: /app/data/storage
       ALLOWED_ORIGIN: "*"
       # SSH web terminal. Disabled by default; set SSH_ENABLED=true and the
       # target/credentials to expose the Terminal page. Credentials stay

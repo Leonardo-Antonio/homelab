@@ -70,6 +70,54 @@ func migrate(ctx context.Context, db *sql.DB) error {
 			updated_at TEXT NOT NULL
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_notes_parent_id ON notes(parent_id);`,
+		// ── Storage (Drive-like) ────────────────────────────────────────────
+		// Content-addressed blobs: one row per unique SHA-256. ref_count is
+		// maintained transactionally by triggers so a physical blob is only
+		// ever garbage-collected once no node references it.
+		`CREATE TABLE IF NOT EXISTS storage_blobs (
+			id         TEXT PRIMARY KEY,      -- sha-256 hex of the content
+			size_bytes INTEGER NOT NULL,
+			ref_count  INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL
+		);`,
+		// Hierarchical tree of folders and files. A file points at exactly one
+		// blob; folders have a NULL blob_id. UNIQUE(parent_id, name) prevents
+		// duplicate names within the same folder.
+		`CREATE TABLE IF NOT EXISTS storage_nodes (
+			id           TEXT PRIMARY KEY,
+			parent_id    TEXT REFERENCES storage_nodes(id) ON DELETE CASCADE,
+			type         TEXT NOT NULL CHECK(type IN ('dir', 'file')),
+			name         TEXT NOT NULL,
+			blob_id      TEXT REFERENCES storage_blobs(id),
+			content_type TEXT,
+			size_bytes   INTEGER NOT NULL DEFAULT 0,
+			created_at   TEXT NOT NULL,
+			updated_at   TEXT NOT NULL
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_storage_nodes_parent_id ON storage_nodes(parent_id);`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_storage_nodes_unique_name
+			ON storage_nodes(IFNULL(parent_id, ''), name);`,
+		// Keep blob ref counts in lockstep with node rows, even for cascading
+		// deletes the application never sees row-by-row.
+		`CREATE TRIGGER IF NOT EXISTS storage_blob_ref_inc
+			AFTER INSERT ON storage_nodes
+			WHEN NEW.blob_id IS NOT NULL
+			BEGIN
+				UPDATE storage_blobs SET ref_count = ref_count + 1 WHERE id = NEW.blob_id;
+			END;`,
+		`CREATE TRIGGER IF NOT EXISTS storage_blob_ref_dec
+			AFTER DELETE ON storage_nodes
+			WHEN OLD.blob_id IS NOT NULL
+			BEGIN
+				UPDATE storage_blobs SET ref_count = ref_count - 1 WHERE id = OLD.blob_id;
+			END;`,
+		`CREATE TRIGGER IF NOT EXISTS storage_blob_ref_move
+			AFTER UPDATE OF blob_id ON storage_nodes
+			WHEN IFNULL(OLD.blob_id, '') <> IFNULL(NEW.blob_id, '')
+			BEGIN
+				UPDATE storage_blobs SET ref_count = ref_count - 1 WHERE id = OLD.blob_id;
+				UPDATE storage_blobs SET ref_count = ref_count + 1 WHERE id = NEW.blob_id;
+			END;`,
 	}
 
 	for _, statement := range statements {

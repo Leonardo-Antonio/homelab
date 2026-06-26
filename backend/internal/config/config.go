@@ -10,6 +10,7 @@ type Config struct {
 	Addr            string
 	DatabasePath    string
 	PhotoStorageDir string
+	StorageDir      string
 	AllowedOrigin   string
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
@@ -38,6 +39,7 @@ func Load() Config {
 		Addr:            getEnv("HTTP_ADDR", ":8080"),
 		DatabasePath:    getEnv("DATABASE_PATH", "data/homelab.db"),
 		PhotoStorageDir: getEnv("PHOTO_STORAGE_DIR", "data/photos"),
+		StorageDir:      getEnv("STORAGE_DIR", "data/storage"),
 		AllowedOrigin:   getEnv("ALLOWED_ORIGIN", "http://localhost:5173,http://localhost:5174"),
 		ReadTimeout:     getDurationSeconds("HTTP_READ_TIMEOUT_SECONDS", 5),
 		WriteTimeout:    getDurationSeconds("HTTP_WRITE_TIMEOUT_SECONDS", 10),

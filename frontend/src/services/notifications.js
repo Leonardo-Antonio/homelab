@@ -48,6 +48,13 @@ export const notify = {
     })
   },
 
+  actionSucceeded(title, description) {
+    sileo.success({
+      title,
+      description,
+    })
+  },
+
   photoSaved() {
     sileo.success({
       title: 'Foto guardada',

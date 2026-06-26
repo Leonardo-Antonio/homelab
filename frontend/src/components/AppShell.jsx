@@ -6,6 +6,7 @@ const navItems = [
   { id: 'camera', label: 'Camara', icon: '>' },
   { id: 'terminal', label: 'Terminal', icon: '_' },
   { id: 'notes', label: 'Notas', icon: '≡' },
+  { id: 'storage', label: 'Drive', icon: '⛁' },
 ]
 
 const COLLAPSED_STORAGE_KEY = 'homelab.sidebar.collapsed'
