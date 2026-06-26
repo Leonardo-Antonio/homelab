@@ -4,6 +4,7 @@ const routes = [
   { path: '/photos', page: 'photos' },
   { path: '/camera', page: 'camera' },
   { path: '/terminal', page: 'terminal' },
+  { path: '/notes', page: 'notes' },
 ]
 
 export const DEFAULT_PAGE = 'clipboard'

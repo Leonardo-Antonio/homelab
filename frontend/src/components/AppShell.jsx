@@ -3,6 +3,7 @@ const navItems = [
   { id: 'photos', label: 'Fotos', icon: 'O' },
   { id: 'camera', label: 'Camara', icon: '>' },
   { id: 'terminal', label: 'Terminal', icon: '_' },
+  { id: 'notes', label: 'Notas', icon: '≡' },
 ]
 
 export function AppShell({ activePage, children, onNavigate }) {

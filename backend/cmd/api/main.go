@@ -13,6 +13,7 @@ import (
 	"homelab/backend/internal/config"
 	"homelab/backend/internal/database"
 	"homelab/backend/internal/httpapi"
+	"homelab/backend/internal/notes"
 	"homelab/backend/internal/photos"
 	"homelab/backend/internal/terminal"
 )
@@ -35,6 +36,9 @@ func main() {
 	photoService := photos.NewService(photoRepository, cfg.PhotoStorageDir)
 	photoHandler := photos.NewHandler(photoService)
 	terminalHandler := terminal.NewHandler(cfg.SSH, cfg.AllowedOrigin)
+	notesRepository := notes.NewRepository(db)
+	notesService := notes.NewService(notesRepository)
+	notesHandler := notes.NewHandler(notesService)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +47,7 @@ func main() {
 	clipboardHandler.Register(mux)
 	photoHandler.Register(mux)
 	terminalHandler.Register(mux)
+	notesHandler.Register(mux)
 
 	handler := httpapi.Recover(httpapi.Logger(httpapi.CORS(cfg.AllowedOrigin)(mux)))
 	server := &http.Server{

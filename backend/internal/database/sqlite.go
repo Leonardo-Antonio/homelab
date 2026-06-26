@@ -60,6 +60,16 @@ func migrate(ctx context.Context, db *sql.DB) error {
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_photos_created_at
 			ON photos(created_at DESC);`,
+		`CREATE TABLE IF NOT EXISTS notes (
+			id         TEXT PRIMARY KEY,
+			parent_id  TEXT REFERENCES notes(id) ON DELETE CASCADE,
+			type       TEXT NOT NULL CHECK(type IN ('dir', 'note')),
+			name       TEXT NOT NULL,
+			content    TEXT,
+			created_at TEXT NOT NULL,
+			updated_at TEXT NOT NULL
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_notes_parent_id ON notes(parent_id);`,
 	}
 
 	for _, statement := range statements {

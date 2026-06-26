@@ -3,6 +3,7 @@ import { AppShell } from './components/AppShell.jsx'
 import { useRoute } from './hooks/useRoute.js'
 import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
+import { NotesPage } from './pages/NotesPage/NotesPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
 import { STANDALONE_VIEW, TerminalPage } from './pages/TerminalPage/TerminalPage.jsx'
 import './App.css'
@@ -12,6 +13,7 @@ const pages = {
   photos: <PhotosPage />,
   camera: <CameraStreamPage />,
   terminal: <TerminalPage />,
+  notes: <NotesPage />,
 }
 
 function getStandaloneView() {
