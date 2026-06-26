@@ -62,3 +62,43 @@ a {
 #root {
   min-height: 100svh;
 }
+
+/* ── Dark theme ──────────────────────────────────────────────────────────────
+   Applied via <html data-theme="dark"> by the settings context. Only the
+   palette tokens are overridden, so every component that uses the variables
+   adapts automatically. */
+:root[data-theme='dark'] {
+  --bg: #15140f;
+  --surface: #1f1e18;
+  --surface-strong: #2a2820;
+  --text: #f2f0e8;
+  --text-muted: #a7a394;
+  --border: #34322a;
+  --border-strong: #4c483d;
+  --accent: #1f9d89;
+  --accent-dark: #29b3a0;
+  --accent-soft: #14352f;
+  --danger-soft: #3a201a;
+  --danger-text: #f0a78f;
+  --success: #5ccfa0;
+  --success-soft: #163326;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
+}
+
+/* Smooth the switch between themes. */
+body {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* ── Font family preference ─────────────────────────────────────────────────
+   Applied via <html data-font="…">. Swaps the body font; the display font is
+   left to headings. */
+:root[data-font='serif'] {
+  --font-body: Georgia, 'Times New Roman', serif;
+}
+
+:root[data-font='mono'] {
+  --font-body: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}

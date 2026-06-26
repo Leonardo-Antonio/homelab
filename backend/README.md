@@ -83,3 +83,31 @@ Image files also expose a `thumbnailUrl`. Thumbnails are downscaled JPEGs
 (longest edge 360px) generated lazily on first request and cached on disk keyed
 by the blob digest, so a grid of previews loads without fetching full images.
 They are written atomically and reclaimed together with their blob.
+
+## Settings API
+
+A single application-wide preferences document (theme, language, font, enabled
+modules) persisted server-side, so the user's choices follow them across
+browsers and devices.
+
+```text
+GET /api/v1/settings   # current settings (defaults if never saved)
+PUT /api/v1/settings   # replace settings
+```
+
+Body / response shape:
+
+```json
+{
+  "theme": "light",       // light | dark | system
+  "language": "es",        // es | en
+  "font": "sans",          // sans | serif | mono
+  "modules": {             // toggle sidebar sections; "config" is never hidden
+    "clipboard": true, "photos": true, "camera": true,
+    "terminal": true, "notes": true, "storage": true
+  }
+}
+```
+
+Missing fields are backfilled from the defaults and unknown module keys are
+dropped, so stored documents stay complete and forward-compatible.

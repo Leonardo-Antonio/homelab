@@ -70,6 +70,15 @@ func migrate(ctx context.Context, db *sql.DB) error {
 			updated_at TEXT NOT NULL
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_notes_parent_id ON notes(parent_id);`,
+		// ── Settings ────────────────────────────────────────────────────────
+		// A single application-wide preferences document (theme, language,
+		// font, enabled modules) stored server-side so it follows the user
+		// across browsers and devices. Constrained to a single row.
+		`CREATE TABLE IF NOT EXISTS settings (
+			id         INTEGER PRIMARY KEY CHECK (id = 1),
+			data       TEXT NOT NULL,
+			updated_at TEXT NOT NULL
+		);`,
 		// ── Storage (Drive-like) ────────────────────────────────────────────
 		// Content-addressed blobs: one row per unique SHA-256. ref_count is
 		// maintained transactionally by triggers so a physical blob is only

@@ -1,0 +1,254 @@
+.config-page {
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.config-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.config-header h1 {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4.6vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+}
+
+.config-header p {
+  color: var(--text-muted);
+  margin: 8px 0 0;
+  max-width: 46rem;
+}
+
+.config-saving {
+  background: var(--accent-soft);
+  border-radius: 999px;
+  color: var(--accent-dark);
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+
+.config-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.config-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.config-section-desc {
+  color: var(--text-muted);
+  margin: -8px 0 4px;
+}
+
+.config-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.config-row-name {
+  font-weight: 600;
+}
+
+/* ── Segmented control ──────────────────────────────────────────────────── */
+
+.seg {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+}
+
+.seg-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted);
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 6px;
+  padding: 7px 14px;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+
+.seg-btn:hover {
+  color: var(--text);
+}
+
+.seg-btn-active {
+  background: var(--accent);
+  color: #fffefa;
+}
+
+.seg-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+/* ── Live preview ───────────────────────────────────────────────────────── */
+
+.config-preview {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.config-preview-tag {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.config-preview-text {
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.config-preview-swatches {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.swatch {
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  height: 26px;
+  width: 26px;
+}
+
+.swatch-accent { background: var(--accent); }
+.swatch-surface { background: var(--surface); }
+.swatch-text { background: var(--text); }
+
+/* ── Module toggles ─────────────────────────────────────────────────────── */
+
+.config-modules {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.config-module {
+  align-items: center;
+  border-radius: 10px;
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  transition: background 0.12s ease;
+}
+
+.config-module:hover {
+  background: var(--surface-strong);
+}
+
+.config-module-icon {
+  align-items: center;
+  background: var(--surface-strong);
+  border-radius: 8px;
+  color: var(--accent-dark);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-weight: 800;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.config-module-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+/* ── Switch ─────────────────────────────────────────────────────────────── */
+
+.switch {
+  background: var(--border-strong);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 26px;
+  padding: 3px;
+  position: relative;
+  transition: background 0.18s ease;
+  width: 46px;
+}
+
+.switch-on {
+  background: var(--accent);
+}
+
+.switch-knob {
+  background: #fffefa;
+  border-radius: 50%;
+  display: block;
+  height: 20px;
+  transition: transform 0.18s ease;
+  width: 20px;
+}
+
+.switch-on .switch-knob {
+  transform: translateX(20px);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .config-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .seg {
+    width: 100%;
+  }
+
+  .seg-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 8px;
+  }
+}

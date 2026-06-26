@@ -6,6 +6,7 @@ const routes = [
   { path: '/terminal', page: 'terminal' },
   { path: '/notes', page: 'notes' },
   { path: '/storage', page: 'storage' },
+  { path: '/config', page: 'config' },
 ]
 
 export const DEFAULT_PAGE = 'clipboard'

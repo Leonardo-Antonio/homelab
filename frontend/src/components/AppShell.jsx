@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
+import { useSettings } from '../context/SettingsContext.jsx'
 
-const navItems = [
-  { id: 'clipboard', label: 'Clipboard', icon: '#' },
-  { id: 'photos', label: 'Fotos', icon: 'O' },
-  { id: 'camera', label: 'Camara', icon: '>' },
-  { id: 'terminal', label: 'Terminal', icon: '_' },
-  { id: 'notes', label: 'Notas', icon: '≡' },
-  { id: 'storage', label: 'Drive', icon: '⛁' },
+// Toggleable modules, in nav order. "config" is appended separately so it can
+// never be disabled (you always need a way back to Settings).
+const moduleItems = [
+  { id: 'clipboard', icon: '#' },
+  { id: 'photos', icon: 'O' },
+  { id: 'camera', icon: '>' },
+  { id: 'terminal', icon: '_' },
+  { id: 'notes', icon: '≡' },
+  { id: 'storage', icon: '⛁' },
 ]
+
+const configItem = { id: 'config', icon: '⚙' }
 
 const COLLAPSED_STORAGE_KEY = 'homelab.sidebar.collapsed'
 
@@ -21,10 +26,19 @@ function readCollapsedPreference() {
 
 export function AppShell({ activePage, children, onNavigate }) {
   const [collapsed, setCollapsed] = useState(readCollapsedPreference)
+  const { settings, t } = useSettings()
 
   useEffect(() => {
     window.localStorage.setItem(COLLAPSED_STORAGE_KEY, String(collapsed))
   }, [collapsed])
+
+  // Only show enabled modules; Settings is always present.
+  const visibleItems = [
+    ...moduleItems.filter((item) => settings.modules?.[item.id] !== false),
+    configItem,
+  ]
+
+  const collapseLabel = collapsed ? t('sidebar.expand') : t('sidebar.collapse')
 
   return (
     <div className={`app-shell ${collapsed ? 'app-shell-collapsed' : ''}`.trim()}>
@@ -35,7 +49,7 @@ export function AppShell({ activePage, children, onNavigate }) {
           </span>
           <span className="brand-text">
             <strong>HomeLab</strong>
-            <small>Personal utilities</small>
+            <small>{t('brand.subtitle')}</small>
           </span>
         </a>
 
@@ -44,26 +58,29 @@ export function AppShell({ activePage, children, onNavigate }) {
           type="button"
           onClick={() => setCollapsed((current) => !current)}
           aria-pressed={collapsed}
-          aria-label={collapsed ? 'Expandir menu' : 'Colapsar menu'}
-          title={collapsed ? 'Expandir menu' : 'Colapsar menu'}
+          aria-label={collapseLabel}
+          title={collapseLabel}
         >
           <span aria-hidden="true">{collapsed ? '»' : '«'}</span>
-          <span className="sidebar-toggle-label">Colapsar</span>
+          <span className="sidebar-toggle-label">{collapseLabel}</span>
         </button>
 
         <nav className="nav-list">
-          {navItems.map((item) => (
-            <button
-              className={`nav-item ${activePage === item.id ? 'nav-item-active' : ''}`}
-              key={item.id}
-              type="button"
-              onClick={() => onNavigate(item.id)}
-              title={collapsed ? item.label : undefined}
-            >
-              <span aria-hidden="true">{item.icon}</span>
-              <span className="nav-item-label">{item.label}</span>
-            </button>
-          ))}
+          {visibleItems.map((item) => {
+            const label = t(`nav.${item.id}`)
+            return (
+              <button
+                className={`nav-item ${activePage === item.id ? 'nav-item-active' : ''}`}
+                key={item.id}
+                type="button"
+                onClick={() => onNavigate(item.id)}
+                title={collapsed ? label : undefined}
+              >
+                <span aria-hidden="true">{item.icon}</span>
+                <span className="nav-item-label">{label}</span>
+              </button>
+            )
+          })}
         </nav>
       </aside>
 
