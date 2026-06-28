@@ -19,10 +19,16 @@ services:
       SSH_USER: ${SSH_USER:-}
       SSH_PASSWORD: ${SSH_PASSWORD:-}
       SSH_INSECURE_IGNORE_HOST_KEY: ${SSH_INSECURE_IGNORE_HOST_KEY:-false}
+      # Network monitor. With network_mode: host, /proc/net/arp reflects the
+      # host network namespace. Set the DNS/DHCP paths to Pi-hole, AdGuard,
+      # dnsmasq or router-exported logs when available.
+      NETWORK_ARP_PATH: ${NETWORK_ARP_PATH:-/proc/net/arp}
+      NETWORK_DHCP_LEASE_PATH: ${NETWORK_DHCP_LEASE_PATH:-}
+      NETWORK_DNS_LOG_PATH: ${NETWORK_DNS_LOG_PATH:-}
+      NETWORK_BLOCKLIST_PATH: ${NETWORK_BLOCKLIST_PATH:-/app/data/network-blocklist.txt}
     volumes:
       - ./backend/data:/app/data
-    networks:
-      - homelab
+    network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz >/dev/null 2>&1"]
       interval: 30s
@@ -42,6 +48,8 @@ services:
         condition: service_healthy
     ports:
       - "8081:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - homelab
 

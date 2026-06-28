@@ -17,6 +17,7 @@ type Config struct {
 	IdleTimeout     time.Duration
 	ShutdownTimeout time.Duration
 	SSH             SSHConfig
+	Network         NetworkConfig
 }
 
 // SSHConfig describes the single remote host the web terminal connects to.
@@ -32,6 +33,13 @@ type SSHConfig struct {
 	KnownHostsPath        string
 	InsecureIgnoreHostKey bool
 	ConnectTimeout        time.Duration
+}
+
+type NetworkConfig struct {
+	ARPPath       string
+	DHCPLeasePath string
+	DNSLogPath    string
+	BlocklistPath string
 }
 
 func Load() Config {
@@ -56,6 +64,12 @@ func Load() Config {
 			KnownHostsPath:        getEnv("SSH_KNOWN_HOSTS_PATH", ""),
 			InsecureIgnoreHostKey: getBool("SSH_INSECURE_IGNORE_HOST_KEY", false),
 			ConnectTimeout:        getDurationSeconds("SSH_CONNECT_TIMEOUT_SECONDS", 10),
+		},
+		Network: NetworkConfig{
+			ARPPath:       getEnv("NETWORK_ARP_PATH", "/proc/net/arp"),
+			DHCPLeasePath: getEnv("NETWORK_DHCP_LEASE_PATH", ""),
+			DNSLogPath:    getEnv("NETWORK_DNS_LOG_PATH", ""),
+			BlocklistPath: getEnv("NETWORK_BLOCKLIST_PATH", "data/network-blocklist.txt"),
 		},
 	}
 }

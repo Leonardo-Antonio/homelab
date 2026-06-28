@@ -71,6 +71,7 @@
   font-weight: 800;
   gap: 8px;
   padding: 8px 12px;
+  border: 0;
 }
 
 .network-live-badge span {
@@ -85,6 +86,63 @@
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.network-error {
+  background: var(--danger-soft);
+  border: 1px solid rgba(143, 44, 17, 0.28);
+  border-radius: var(--radius);
+  color: var(--danger-text);
+  font-weight: 700;
+  padding: 12px 14px;
+}
+
+.network-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.network-toolbar input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  flex: 1;
+  min-height: 42px;
+  min-width: 220px;
+  padding: 0 12px;
+}
+
+.network-toolbar input:focus {
+  border-color: var(--accent);
+  outline: 3px solid rgba(11, 107, 95, 0.16);
+}
+
+.status-tabs {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+}
+
+.status-tabs button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.status-tabs .status-tab-active {
+  background: var(--accent);
+  color: #fffefa;
 }
 
 .network-stat {
@@ -283,8 +341,21 @@
   border-radius: var(--radius);
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(220px, 1.3fr) 110px minmax(150px, 1fr) 90px;
+  grid-template-columns: minmax(220px, 1.25fr) 110px minmax(150px, 0.8fr) 110px minmax(230px, 1fr);
   padding: 12px;
+}
+
+.device-unknown {
+  border-color: rgba(199, 154, 35, 0.5);
+}
+
+.device-blocked {
+  background: var(--danger-soft);
+  border-color: rgba(143, 44, 17, 0.28);
+}
+
+.device-trusted {
+  border-color: rgba(22, 120, 79, 0.24);
 }
 
 .device-main {
@@ -313,12 +384,16 @@
   width: 10px;
 }
 
-.net-dot-online {
+.net-dot-trusted {
   background: var(--success);
 }
 
-.net-dot-idle {
+.net-dot-unknown {
   background: #c79a23;
+}
+
+.net-dot-blocked {
+  background: var(--danger-text);
 }
 
 .device-chip,
@@ -337,8 +412,31 @@
   font-size: 0.82rem;
 }
 
-.device-usage {
+.device-seen {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.device-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   justify-self: end;
+}
+
+.device-actions button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  min-height: 30px;
+  padding: 0 8px;
+}
+
+.device-actions button:hover {
+  border-color: var(--accent);
 }
 
 .domain-row {
@@ -374,14 +472,84 @@
   justify-items: end;
 }
 
+.risk-blocked,
 .risk-bloqueado {
   background: var(--danger-soft);
   color: var(--danger-text);
 }
 
+.risk-allowed {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
 .risk-sistema {
   background: var(--surface-strong);
   color: var(--text-muted);
+}
+
+.source-list {
+  display: grid;
+  gap: 10px;
+}
+
+.source-row {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 88px minmax(0, 1fr);
+  padding: 10px;
+}
+
+.source-row div {
+  display: grid;
+  min-width: 0;
+}
+
+.source-row strong,
+.source-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-row span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.source-pill {
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  justify-self: start;
+  padding: 4px 9px;
+}
+
+.source-on {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.source-off {
+  background: var(--surface-strong);
+  color: var(--text-muted);
+}
+
+.blocklist-note,
+.network-empty {
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  padding: 12px;
+}
+
+.network-empty {
+  text-align: center;
 }
 
 .network-alert {
@@ -445,7 +613,7 @@
   }
 
   .device-chip,
-  .device-usage {
+  .device-actions {
     justify-self: start;
   }
 
@@ -476,5 +644,20 @@
     align-items: center;
     display: flex;
     justify-items: start;
+  }
+
+  .network-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .network-toolbar input,
+  .status-tabs {
+    width: 100%;
+  }
+
+  .status-tabs button {
+    flex: 1;
+    padding: 0 6px;
   }
 }

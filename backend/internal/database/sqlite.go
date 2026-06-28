@@ -79,6 +79,23 @@ func migrate(ctx context.Context, db *sql.DB) error {
 			data       TEXT NOT NULL,
 			updated_at TEXT NOT NULL
 		);`,
+		// ── Network monitor ────────────────────────────────────────────────
+		// User decisions for discovered devices. Discovery comes from live
+		// sources such as ARP/DHCP/DNS logs, while this table keeps the local
+		// intent: trusted, blocked or ignored.
+		`CREATE TABLE IF NOT EXISTS network_devices (
+			id          TEXT PRIMARY KEY,
+			name        TEXT NOT NULL,
+			ip          TEXT NOT NULL,
+			mac         TEXT NOT NULL,
+			status      TEXT NOT NULL CHECK(status IN ('unknown', 'trusted', 'blocked', 'ignored')),
+			note        TEXT NOT NULL DEFAULT '',
+			first_seen  TEXT NOT NULL,
+			last_seen   TEXT NOT NULL,
+			updated_at  TEXT NOT NULL
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_network_devices_status ON network_devices(status);`,
+		`CREATE INDEX IF NOT EXISTS idx_network_devices_last_seen ON network_devices(last_seen DESC);`,
 		// ── Storage (Drive-like) ────────────────────────────────────────────
 		// Content-addressed blobs: one row per unique SHA-256. ref_count is
 		// maintained transactionally by triggers so a physical blob is only

@@ -13,6 +13,7 @@ import (
 	"homelab/backend/internal/config"
 	"homelab/backend/internal/database"
 	"homelab/backend/internal/httpapi"
+	"homelab/backend/internal/network"
 	"homelab/backend/internal/notes"
 	"homelab/backend/internal/photos"
 	"homelab/backend/internal/settings"
@@ -51,6 +52,14 @@ func main() {
 	settingsRepository := settings.NewRepository(db)
 	settingsService := settings.NewService(settingsRepository)
 	settingsHandler := settings.NewHandler(settingsService)
+	networkRepository := network.NewRepository(db)
+	networkService := network.NewService(networkRepository, network.Config{
+		ARPPath:       cfg.Network.ARPPath,
+		DHCPLeasePath: cfg.Network.DHCPLeasePath,
+		DNSLogPath:    cfg.Network.DNSLogPath,
+		BlocklistPath: cfg.Network.BlocklistPath,
+	})
+	networkHandler := network.NewHandler(networkService)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +71,7 @@ func main() {
 	notesHandler.Register(mux)
 	storageHandler.Register(mux)
 	settingsHandler.Register(mux)
+	networkHandler.Register(mux)
 
 	handler := httpapi.Recover(httpapi.Logger(httpapi.CORS(cfg.AllowedOrigin)(mux)))
 	server := &http.Server{
