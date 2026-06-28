@@ -3,6 +3,7 @@ import { AppShell } from './components/AppShell.jsx'
 import { useSettings } from './context/SettingsContext.jsx'
 import { useRoute } from './hooks/useRoute.js'
 import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
+import { CinemaPage } from './pages/CinemaPage/CinemaPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { ConfigPage } from './pages/ConfigPage/ConfigPage.jsx'
 import { NetworkPage } from './pages/NetworkPage/NetworkPage.jsx'
@@ -16,6 +17,7 @@ const pages = {
   network: <NetworkPage />,
   clipboard: <ClipboardPage />,
   photos: <PhotosPage />,
+  cinema: <CinemaPage />,
   camera: <CameraStreamPage />,
   terminal: <TerminalPage />,
   notes: <NotesPage />,

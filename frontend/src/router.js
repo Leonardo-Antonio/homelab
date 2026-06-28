@@ -3,6 +3,7 @@ const routes = [
   { path: '/network', page: 'network' },
   { path: '/clipboard', page: 'clipboard' },
   { path: '/photos', page: 'photos' },
+  { path: '/cinema', page: 'cinema' },
   { path: '/camera', page: 'camera' },
   { path: '/terminal', page: 'terminal' },
   { path: '/notes', page: 'notes' },

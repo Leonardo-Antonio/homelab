@@ -7,6 +7,7 @@ const moduleItems = [
   { id: 'network', icon: '⌁' },
   { id: 'clipboard', icon: '#' },
   { id: 'photos', icon: 'O' },
+  { id: 'cinema', icon: '▶' },
   { id: 'camera', icon: '>' },
   { id: 'terminal', icon: '_' },
   { id: 'notes', icon: '≡' },
