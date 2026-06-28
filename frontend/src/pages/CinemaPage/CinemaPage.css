@@ -64,9 +64,36 @@
 
 .cinema-search input:focus-visible,
 .movie-card:focus-visible,
+.source-tab:focus-visible,
 .source-list a:focus-visible {
   outline: 3px solid rgba(240, 193, 90, 0.26);
   outline-offset: 3px;
+}
+
+.cinema-source-tabs {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  width: fit-content;
+}
+
+.source-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--text-muted);
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.source-tab-active {
+  background: var(--text);
+  color: var(--surface);
 }
 
 .cinema-stage {
@@ -87,8 +114,10 @@
   overflow: hidden;
 }
 
-.cinema-player video {
+.cinema-player video,
+.cinema-player iframe {
   background: #000;
+  border: 0;
   display: block;
   height: 100%;
   object-fit: contain;
@@ -235,6 +264,14 @@
 .movie-card-copy {
   display: grid;
   gap: 4px;
+}
+
+.movie-card-copy em {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .movie-card-copy strong {

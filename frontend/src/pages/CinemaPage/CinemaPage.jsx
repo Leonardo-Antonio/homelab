@@ -6,6 +6,11 @@ import { notify } from '../../services/notifications.js'
 import './CinemaPage.css'
 
 const DEFAULT_QUERY = 'sherlock jr'
+const SOURCE_FILTERS = [
+  { id: 'all', label: 'Todo' },
+  { id: 'archive', label: 'Archive.org' },
+  { id: 'dailymotion', label: 'Dailymotion' },
+]
 
 export function CinemaPage() {
   const [query, setQuery] = useState(DEFAULT_QUERY)
@@ -13,6 +18,7 @@ export function CinemaPage() {
   const [movies, setMovies] = useState([])
   const [selectedMovie, setSelectedMovie] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [sourceFilter, setSourceFilter] = useState('all')
 
   useEffect(() => {
     let active = true
@@ -48,12 +54,27 @@ export function CinemaPage() {
     () => (selectedMovie ? buildLegalSources(selectedMovie) : []),
     [selectedMovie],
   )
+  const filteredMovies = useMemo(() => {
+    if (sourceFilter === 'all') return movies
+    return movies.filter((movie) => movie.source === sourceFilter)
+  }, [movies, sourceFilter])
 
   function handleSearch(event) {
     event.preventDefault()
     const nextQuery = query.trim()
     if (!nextQuery) return
     setSubmittedQuery(nextQuery)
+  }
+
+  function handleSourceFilter(nextSource) {
+    setSourceFilter(nextSource)
+    if (nextSource === 'all') {
+      setSelectedMovie((current) => current || movies[0] || null)
+      return
+    }
+
+    const firstMatch = movies.find((movie) => movie.source === nextSource)
+    if (firstMatch) setSelectedMovie(firstMatch)
   }
 
   return (
@@ -80,15 +101,36 @@ export function CinemaPage() {
         </form>
       </header>
 
+      <div className="cinema-source-tabs" aria-label="Fuentes de busqueda">
+        {SOURCE_FILTERS.map((source) => (
+          <button
+            className={sourceFilter === source.id ? 'source-tab source-tab-active' : 'source-tab'}
+            key={source.id}
+            type="button"
+            onClick={() => handleSourceFilter(source.id)}
+          >
+            {source.label}
+          </button>
+        ))}
+      </div>
+
       <section className="cinema-stage" aria-label="Resultado seleccionado">
         <div className="cinema-player">
-          {selectedMovie?.previewUrl ? (
+          {selectedMovie?.playbackType === 'video' && selectedMovie.previewUrl ? (
             <video
               key={selectedMovie.previewUrl}
               controls
               playsInline
               poster={selectedMovie.posterUrl}
               src={selectedMovie.previewUrl}
+            />
+          ) : selectedMovie?.playbackType === 'iframe' && selectedMovie.previewUrl ? (
+            <iframe
+              key={selectedMovie.previewUrl}
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              src={selectedMovie.previewUrl}
+              title={selectedMovie.title}
             />
           ) : (
             <div className="cinema-player-empty">
@@ -105,7 +147,12 @@ export function CinemaPage() {
                 <p className="eyebrow">{selectedMovie.genre}</p>
                 <h2>{selectedMovie.title}</h2>
                 <p className="cinema-meta">
-                  {[selectedMovie.releaseYear, selectedMovie.rating, selectedMovie.runtime ? `${selectedMovie.runtime} min` : null]
+                  {[
+                    selectedMovie.sourceLabel,
+                    selectedMovie.releaseYear,
+                    selectedMovie.rating,
+                    selectedMovie.runtime ? `${selectedMovie.runtime} min` : null,
+                  ]
                     .filter(Boolean)
                     .join(' / ')}
                 </p>
@@ -133,7 +180,11 @@ export function CinemaPage() {
         <div className="section-heading">
           <div>
             <h2 id="cinema-results-title">Alternativas</h2>
-            <p>{isLoading ? 'Consultando catalogos...' : `${movies.length} resultados para "${submittedQuery}"`}</p>
+            <p>
+              {isLoading
+                ? 'Consultando catalogos...'
+                : `${filteredMovies.length} resultados para "${submittedQuery}"`}
+            </p>
           </div>
         </div>
 
@@ -144,9 +195,9 @@ export function CinemaPage() {
             <span />
             <span />
           </div>
-        ) : movies.length > 0 ? (
+        ) : filteredMovies.length > 0 ? (
           <ul className="movie-grid">
-            {movies.map((movie) => (
+            {filteredMovies.map((movie) => (
               <li key={movie.id}>
                 <button
                   className={`movie-card ${selectedMovie?.id === movie.id ? 'movie-card-active' : ''}`}
@@ -157,6 +208,7 @@ export function CinemaPage() {
                     {movie.posterUrl ? <img src={movie.posterUrl} alt="" loading="lazy" /> : null}
                   </span>
                   <span className="movie-card-copy">
+                    <em>{movie.sourceLabel}</em>
                     <strong>{movie.title}</strong>
                     <small>{[movie.releaseYear, movie.genre].filter(Boolean).join(' / ')}</small>
                   </span>

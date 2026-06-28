@@ -169,7 +169,7 @@ export function NetworkPage() {
           <div className="network-panel-head">
             <div>
               <h2>Dominios en vivo</h2>
-              <p>Disponible cuando conectas `NETWORK_DNS_LOG_PATH` a Pi-hole, AdGuard o dnsmasq.</p>
+              <p>Consultas DNS leídas desde Pi-hole, dnsmasq o una ruta configurada en el servidor.</p>
             </div>
           </div>
           <div className="domain-list">

@@ -29,6 +29,7 @@ services:
       NETWORK_BLOCKLIST_PATH: ${NETWORK_BLOCKLIST_PATH:-/app/data/network-blocklist.txt}
     volumes:
       - ./backend/data:/app/data
+      - /var/log:/host/var/log:ro
     network_mode: host
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:18080/healthz >/dev/null 2>&1"]

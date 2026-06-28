@@ -18,6 +18,15 @@ var (
 	dnsmasqBlockedPattern = regexp.MustCompile(`(gravity blocked|blocked|reply error).*\s([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})`)
 )
 
+var dnsLogCandidates = []string{
+	"/host/var/log/pihole/pihole.log",
+	"/host/var/log/pihole.log",
+	"/host/var/log/dnsmasq.log",
+	"/var/log/pihole/pihole.log",
+	"/var/log/pihole.log",
+	"/var/log/dnsmasq.log",
+}
+
 type Collector struct {
 	config Config
 }
@@ -159,7 +168,14 @@ func readDHCPLeases(path string, now time.Time) ([]Device, Source) {
 
 func readDNSLog(path string, devices []Device, limit int) ([]Visit, Source) {
 	if path == "" {
-		return nil, Source{Name: "DNS", Available: false, Detail: "configura NETWORK_DNS_LOG_PATH para ver dominios reales"}
+		path = firstExistingPath(dnsLogCandidates)
+	}
+	if path == "" {
+		return nil, Source{
+			Name:      "DNS",
+			Available: false,
+			Detail:    "no encontré pihole.log ni dnsmasq.log; configura NETWORK_DNS_LOG_PATH",
+		}
 	}
 	file, err := os.Open(path)
 	if err != nil {
@@ -193,6 +209,16 @@ func readDNSLog(path string, devices []Device, limit int) ([]Visit, Source) {
 		visits = visits[:limit]
 	}
 	return visits, Source{Name: "DNS", Path: path, Available: true, Detail: fmt.Sprintf("%d eventos recientes", len(visits))}
+}
+
+func firstExistingPath(paths []string) string {
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err == nil && !info.IsDir() {
+			return path
+		}
+	}
+	return ""
 }
 
 func parseDNSLine(line string, nameByIP map[string]string) (Visit, bool) {
