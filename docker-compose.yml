@@ -5,7 +5,7 @@ services:
     container_name: homelab-backend
     restart: unless-stopped
     environment:
-      HTTP_ADDR: :8080
+      HTTP_ADDR: :18080
       DATABASE_PATH: /app/data/homelab.db
       PHOTO_STORAGE_DIR: /app/data/photos
       STORAGE_DIR: /app/data/storage
@@ -19,9 +19,10 @@ services:
       SSH_USER: ${SSH_USER:-}
       SSH_PASSWORD: ${SSH_PASSWORD:-}
       SSH_INSECURE_IGNORE_HOST_KEY: ${SSH_INSECURE_IGNORE_HOST_KEY:-false}
-      # Network monitor. With network_mode: host, /proc/net/arp reflects the
-      # host network namespace. Set the DNS/DHCP paths to Pi-hole, AdGuard,
-      # dnsmasq or router-exported logs when available.
+      # Network monitor. The backend runs in host network mode so /proc/net/arp
+      # reflects the server network namespace. The API uses port 18080 to avoid
+      # collisions with common services on 8080; the public frontend remains on
+      # port 8081.
       NETWORK_ARP_PATH: ${NETWORK_ARP_PATH:-/proc/net/arp}
       NETWORK_DHCP_LEASE_PATH: ${NETWORK_DHCP_LEASE_PATH:-}
       NETWORK_DNS_LOG_PATH: ${NETWORK_DNS_LOG_PATH:-}
@@ -30,7 +31,7 @@ services:
       - ./backend/data:/app/data
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:18080/healthz >/dev/null 2>&1"]
       interval: 30s
       timeout: 5s
       retries: 3
