@@ -1,5 +1,6 @@
 // Maps app pages to URL paths. The page id matches the nav item ids in AppShell.
 const routes = [
+  { path: '/network', page: 'network' },
   { path: '/clipboard', page: 'clipboard' },
   { path: '/photos', page: 'photos' },
   { path: '/camera', page: 'camera' },

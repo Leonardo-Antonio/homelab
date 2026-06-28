@@ -5,6 +5,7 @@ import { useRoute } from './hooks/useRoute.js'
 import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { ConfigPage } from './pages/ConfigPage/ConfigPage.jsx'
+import { NetworkPage } from './pages/NetworkPage/NetworkPage.jsx'
 import { NotesPage } from './pages/NotesPage/NotesPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
 import { StoragePage } from './pages/StoragePage/StoragePage.jsx'
@@ -12,6 +13,7 @@ import { STANDALONE_VIEW, TerminalPage } from './pages/TerminalPage/TerminalPage
 import './App.css'
 
 const pages = {
+  network: <NetworkPage />,
   clipboard: <ClipboardPage />,
   photos: <PhotosPage />,
   camera: <CameraStreamPage />,

@@ -2,13 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { getSettings, saveSettings } from '../services/settingsApi.js'
 import { createTranslator } from '../i18n.js'
 
-const MODULE_ORDER = ['clipboard', 'photos', 'camera', 'terminal', 'notes', 'storage']
+const MODULE_ORDER = ['network', 'clipboard', 'photos', 'camera', 'terminal', 'notes', 'storage']
 
 const DEFAULT_SETTINGS = {
   theme: 'light',
   language: 'es',
   font: 'sans',
   modules: {
+    network: true,
     clipboard: true,
     photos: true,
     camera: true,

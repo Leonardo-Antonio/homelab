@@ -1,0 +1,480 @@
+.network-page {
+  display: grid;
+  gap: 20px;
+}
+
+.network-hero {
+  align-items: flex-start;
+  background:
+    linear-gradient(135deg, rgba(11, 107, 95, 0.16), transparent 48%),
+    linear-gradient(90deg, var(--surface), var(--surface-strong));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 26px;
+  position: relative;
+}
+
+.network-hero::after {
+  background-image:
+    linear-gradient(rgba(11, 107, 95, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 107, 95, 0.16) 1px, transparent 1px);
+  background-size: 34px 34px;
+  content: '';
+  inset: 0;
+  mask-image: linear-gradient(90deg, transparent, #000);
+  opacity: 0.55;
+  pointer-events: none;
+  position: absolute;
+}
+
+.network-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.network-kicker {
+  color: var(--accent-dark);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.network-hero h1 {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 6vw, 4.6rem);
+  line-height: 0.95;
+  margin: 0;
+}
+
+.network-hero p {
+  color: var(--text-muted);
+  margin: 14px 0 0;
+  max-width: 48rem;
+}
+
+.network-live-badge {
+  align-items: center;
+  background: var(--text);
+  border-radius: 999px;
+  color: var(--surface);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.network-live-badge span {
+  animation: livePulse 1.4s ease-in-out infinite;
+  background: #5ccfa0;
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+
+.network-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.network-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 5px;
+  padding: 18px;
+}
+
+.network-stat span,
+.network-stat small,
+.network-panel p,
+.domain-row span,
+.network-alert span,
+.device-main span,
+.device-mac {
+  color: var(--text-muted);
+}
+
+.network-stat span {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.network-stat strong {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.network-stat-good {
+  border-color: rgba(22, 120, 79, 0.42);
+}
+
+.network-stat-warn {
+  border-color: rgba(240, 193, 90, 0.75);
+}
+
+.network-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+}
+
+.network-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.network-wide {
+  grid-column: 1 / -1;
+}
+
+.network-panel-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.network-panel h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.network-panel p {
+  font-size: 0.9rem;
+  margin: 3px 0 0;
+}
+
+.network-icon-btn {
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  display: inline-flex;
+  flex: 0 0 38px;
+  font-size: 1rem;
+  font-weight: 900;
+  height: 38px;
+  justify-content: center;
+}
+
+.network-map {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 12px;
+  min-height: 270px;
+  padding: 22px;
+  position: relative;
+}
+
+.map-node,
+.map-cluster span {
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+}
+
+.map-node {
+  background: var(--surface);
+  justify-self: center;
+  min-height: 54px;
+  width: 112px;
+}
+
+.map-router {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fffefa;
+}
+
+.map-line-router,
+.map-line-core {
+  background: var(--border-strong);
+  height: 24px;
+  justify-self: center;
+  width: 2px;
+}
+
+.map-cluster {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.map-cluster span {
+  background: var(--surface);
+  color: var(--accent-dark);
+  min-height: 50px;
+}
+
+.traffic-bars {
+  display: grid;
+  gap: 13px;
+}
+
+.traffic-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 86px minmax(0, 1fr) 42px;
+}
+
+.traffic-row span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.traffic-track {
+  background: var(--surface-strong);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.traffic-track span {
+  background: var(--accent);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.traffic-row strong {
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.device-table,
+.domain-list,
+.alert-list {
+  display: grid;
+  gap: 8px;
+}
+
+.device-row {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(220px, 1.3fr) 110px minmax(150px, 1fr) 90px;
+  padding: 12px;
+}
+
+.device-main {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.device-main div {
+  display: grid;
+  min-width: 0;
+}
+
+.device-main strong,
+.device-main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.net-dot {
+  border-radius: 50%;
+  flex: 0 0 10px;
+  height: 10px;
+  width: 10px;
+}
+
+.net-dot-online {
+  background: var(--success);
+}
+
+.net-dot-idle {
+  background: #c79a23;
+}
+
+.device-chip,
+.risk-tag {
+  background: var(--accent-soft);
+  border-radius: 999px;
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  justify-self: start;
+  padding: 4px 9px;
+}
+
+.device-mac {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
+.device-usage {
+  justify-self: end;
+}
+
+.domain-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 2px 0 10px;
+}
+
+.domain-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.domain-row div:first-child {
+  display: grid;
+  min-width: 0;
+}
+
+.domain-row strong,
+.domain-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domain-meta {
+  align-items: end;
+  display: grid;
+  flex-shrink: 0;
+  justify-items: end;
+}
+
+.risk-bloqueado {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.risk-sistema {
+  background: var(--surface-strong);
+  color: var(--text-muted);
+}
+
+.network-alert {
+  border-left: 4px solid var(--border-strong);
+  display: grid;
+  gap: 3px;
+  padding: 3px 0 3px 12px;
+}
+
+.alert-warning {
+  border-left-color: #c79a23;
+}
+
+.alert-info {
+  border-left-color: var(--accent);
+}
+
+.alert-blocked {
+  border-left-color: var(--danger-text);
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.86);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@media (max-width: 1100px) {
+  .network-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .network-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .network-hero {
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .network-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .map-cluster {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .device-row {
+    grid-template-columns: 1fr;
+  }
+
+  .device-chip,
+  .device-usage {
+    justify-self: start;
+  }
+
+  .device-mac {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 520px) {
+  .network-page {
+    gap: 14px;
+  }
+
+  .network-panel {
+    padding: 14px;
+  }
+
+  .traffic-row {
+    grid-template-columns: 74px minmax(0, 1fr) 36px;
+  }
+
+  .domain-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .domain-meta {
+    align-items: center;
+    display: flex;
+    justify-items: start;
+  }
+}

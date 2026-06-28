@@ -10,6 +10,7 @@ const dictionaries = {
     'sidebar.expand': 'Expandir menú',
 
     'nav.clipboard': 'Clipboard',
+    'nav.network': 'Red',
     'nav.photos': 'Fotos',
     'nav.camera': 'Cámara',
     'nav.terminal': 'Terminal',
@@ -46,6 +47,7 @@ const dictionaries = {
     'sidebar.expand': 'Expand menu',
 
     'nav.clipboard': 'Clipboard',
+    'nav.network': 'Network',
     'nav.photos': 'Photos',
     'nav.camera': 'Camera',
     'nav.terminal': 'Terminal',

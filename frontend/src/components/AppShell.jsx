@@ -4,6 +4,7 @@ import { useSettings } from '../context/SettingsContext.jsx'
 // Toggleable modules, in nav order. "config" is appended separately so it can
 // never be disabled (you always need a way back to Settings).
 const moduleItems = [
+  { id: 'network', icon: '⌁' },
   { id: 'clipboard', icon: '#' },
   { id: 'photos', icon: 'O' },
   { id: 'camera', icon: '>' },

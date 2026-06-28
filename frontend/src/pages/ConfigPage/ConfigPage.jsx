@@ -3,8 +3,8 @@ import { useSettings } from '../../context/SettingsContext.jsx'
 import { notify } from '../../services/notifications.js'
 import './ConfigPage.css'
 
-const MODULE_IDS = ['clipboard', 'photos', 'camera', 'terminal', 'notes', 'storage']
-const MODULE_ICONS = { clipboard: '#', photos: 'O', camera: '>', terminal: '_', notes: '≡', storage: '⛁' }
+const MODULE_IDS = ['network', 'clipboard', 'photos', 'camera', 'terminal', 'notes', 'storage']
+const MODULE_ICONS = { network: '⌁', clipboard: '#', photos: 'O', camera: '>', terminal: '_', notes: '≡', storage: '⛁' }
 
 // orderedModules returns the known module ids in the saved order, appending any
 // the stored order happens to omit so the list is always complete.
