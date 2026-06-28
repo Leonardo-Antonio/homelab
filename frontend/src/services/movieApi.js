@@ -1,7 +1,9 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 const ARCHIVE_SEARCH_URL = 'https://archive.org/advancedsearch.php'
 const ARCHIVE_METADATA_URL = 'https://archive.org/metadata'
 const ARCHIVE_DOWNLOAD_URL = 'https://archive.org/download'
 const DAILYMOTION_SEARCH_URL = 'https://api.dailymotion.com/videos'
+const ITUNES_SEARCH_URL = 'https://itunes.apple.com/search'
 
 // To add a source, append one object here. The search function receives
 // (term, limit) and must return createMovieResult(...) items.
@@ -19,6 +21,34 @@ export const MOVIE_SOURCE_CONFIGS = [
     enabled: true,
     limit: 8,
     search: searchDailymotionVideos,
+  },
+  {
+    id: 'itunes',
+    label: 'Apple / iTunes',
+    enabled: true,
+    limit: 10,
+    search: searchItunesMovies,
+  },
+  {
+    id: 'itunes-tv',
+    label: 'Series (Apple)',
+    enabled: true,
+    limit: 10,
+    search: searchItunesTvShows,
+  },
+  {
+    id: 'cuevana',
+    label: 'Cuevana',
+    enabled: true,
+    limit: 12,
+    search: (term, limit) => searchCinemaSource('cuevana', term, limit),
+  },
+  {
+    id: 'pelisplus',
+    label: 'PelisPlus',
+    enabled: true,
+    limit: 12,
+    search: (term, limit) => searchCinemaSource('pelisplus', term, limit),
   },
 ]
 
@@ -125,6 +155,98 @@ function normalizeDailymotionVideo(video) {
     sourceUrl: video.url || `https://www.dailymotion.com/video/${video.id}`,
     description: cleanText(video.description) || 'Sin descripcion disponible.',
   })
+}
+
+function itunesArtwork(url) {
+  // iTunes returns 100x100 thumbnails; upscale the dimensions in the path.
+  return String(url || '').replace(/\/\d+x\d+bb\.(jpg|png)$/i, '/600x600bb.$1')
+}
+
+function normalizeItunesItem(item, kind) {
+  const isTv = kind === 'tv'
+  const title = (isTv ? item.collectionName : item.trackName) || item.trackName || 'Sin titulo'
+  const releaseYear = item.releaseDate ? new Date(item.releaseDate).getFullYear() : null
+  const runtime = item.trackTimeMillis ? Math.round(item.trackTimeMillis / 60000) : null
+  const sourceUrl = item.trackViewUrl || item.collectionViewUrl || ''
+  const idValue = item.trackId || item.collectionId || encodeURIComponent(title)
+
+  return createMovieResult({
+    id: `itunes:${isTv ? 'tv' : 'movie'}:${idValue}`,
+    source: isTv ? 'itunes-tv' : 'itunes',
+    sourceLabel: isTv ? 'Series (Apple)' : 'Apple / iTunes',
+    playbackType: item.previewUrl ? 'video' : 'external',
+    title,
+    director: item.artistName || 'Apple TV',
+    releaseYear: Number.isFinite(releaseYear) ? releaseYear : null,
+    genre: item.primaryGenreName || (isTv ? 'Serie' : 'Pelicula'),
+    rating: item.contentAdvisoryRating || 'iTunes',
+    runtime: isTv ? null : runtime,
+    posterUrl: itunesArtwork(item.artworkUrl100),
+    previewUrl: item.previewUrl || '',
+    sourceUrl,
+    description: cleanText(item.longDescription || item.shortDescription) || 'Sin sinopsis disponible.',
+  })
+}
+
+async function searchItunes({ term, limit, media, entity, kind }) {
+  const params = new URLSearchParams({
+    term,
+    media,
+    limit: String(limit),
+    country: 'us',
+    explicit: 'No',
+  })
+  if (entity) params.set('entity', entity)
+
+  const response = await fetch(`${ITUNES_SEARCH_URL}?${params.toString()}`)
+  if (!response.ok) return []
+
+  const data = await response.json()
+  return (data.results || []).map((item) => normalizeItunesItem(item, kind))
+}
+
+async function searchItunesMovies(term, limit) {
+  return searchItunes({ term, limit, media: 'movie', entity: 'movie', kind: 'movie' })
+}
+
+async function searchItunesTvShows(term, limit) {
+  return searchItunes({ term, limit, media: 'tvShow', entity: 'tvSeason', kind: 'tv' })
+}
+
+function normalizeCinemaItem(item) {
+  return createMovieResult({
+    id: item.id || `${item.source}:${item.sourceUrl}`,
+    source: item.source,
+    sourceLabel: item.sourceLabel,
+    playbackType: 'external',
+    title: item.title || 'Sin titulo',
+    director: item.sourceLabel || '',
+    releaseYear: Number.isFinite(item.releaseYear) ? item.releaseYear : null,
+    genre: item.kind === 'tv' ? 'Serie' : 'Pelicula',
+    rating: '',
+    runtime: null,
+    posterUrl: item.posterUrl || '',
+    previewUrl: '',
+    sourceUrl: item.sourceUrl || '',
+    description: 'Abre la ficha en la fuente para ver opciones de reproduccion.',
+  })
+}
+
+// Cuevana / PelisPlus and similar sites have no public API and block direct
+// browser requests via CORS, so they are scraped server-side by the backend
+// cinema proxy. This calls that endpoint for a single source.
+async function searchCinemaSource(sourceId, term, limit) {
+  const params = new URLSearchParams({
+    q: term,
+    source: sourceId,
+    limit: String(limit),
+  })
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/cinema/search?${params.toString()}`)
+  if (!response.ok) return []
+
+  const data = await response.json()
+  return (data.items || []).map(normalizeCinemaItem)
 }
 
 async function fetchMetadata(identifier) {
@@ -253,6 +375,24 @@ export function buildLegalSources(movie) {
       label: 'Archive.org',
       url: `https://archive.org/search?query=${encodedTitle}`,
       note: 'Dominio publico y archivos autorizados',
+    },
+    {
+      id: 'themoviedb',
+      label: 'TheMovieDB',
+      url: `https://www.themoviedb.org/search?query=${encodedTitle}`,
+      note: 'Ficha, reparto y proveedores',
+    },
+    {
+      id: 'cuevana',
+      label: 'Cuevana',
+      url: `https://cuevana.biz/?s=${encodedTitle}`,
+      note: 'Buscador externo (enlaces de terceros)',
+    },
+    {
+      id: 'pelisplus',
+      label: 'PelisPlus',
+      url: `https://pelisplus.to/search?q=${encodedTitle}`,
+      note: 'Buscador externo (enlaces de terceros)',
     },
   ]
 

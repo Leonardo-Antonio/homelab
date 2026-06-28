@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"homelab/backend/internal/cinema"
 	"homelab/backend/internal/clipboard"
 	"homelab/backend/internal/config"
 	"homelab/backend/internal/database"
@@ -60,6 +61,11 @@ func main() {
 		BlocklistPath: cfg.Network.BlocklistPath,
 	})
 	networkHandler := network.NewHandler(networkService)
+	cinemaService := cinema.NewService(
+		cinema.SourcesFromAllowlist(cfg.Cinema.Sources),
+		cinema.Config{Timeout: cfg.Cinema.RequestTimeout, UserAgent: cfg.Cinema.UserAgent},
+	)
+	cinemaHandler := cinema.NewHandler(cinemaService)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +78,7 @@ func main() {
 	storageHandler.Register(mux)
 	settingsHandler.Register(mux)
 	networkHandler.Register(mux)
+	cinemaHandler.Register(mux)
 
 	handler := httpapi.Recover(httpapi.Logger(httpapi.CORS(cfg.AllowedOrigin)(mux)))
 	server := &http.Server{

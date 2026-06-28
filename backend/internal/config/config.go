@@ -18,6 +18,15 @@ type Config struct {
 	ShutdownTimeout time.Duration
 	SSH             SSHConfig
 	Network         NetworkConfig
+	Cinema          CinemaConfig
+}
+
+// CinemaConfig controls the server-side catalog scraper. Sources is an
+// optional comma separated allowlist of source ids; empty enables all.
+type CinemaConfig struct {
+	Sources        string
+	RequestTimeout time.Duration
+	UserAgent      string
 }
 
 // SSHConfig describes the single remote host the web terminal connects to.
@@ -70,6 +79,11 @@ func Load() Config {
 			DHCPLeasePath: getEnv("NETWORK_DHCP_LEASE_PATH", ""),
 			DNSLogPath:    getEnv("NETWORK_DNS_LOG_PATH", ""),
 			BlocklistPath: getEnv("NETWORK_BLOCKLIST_PATH", "data/network-blocklist.txt"),
+		},
+		Cinema: CinemaConfig{
+			Sources:        getEnv("CINEMA_SOURCES", ""),
+			RequestTimeout: getDurationSeconds("CINEMA_REQUEST_TIMEOUT_SECONDS", 12),
+			UserAgent:      getEnv("CINEMA_USER_AGENT", ""),
 		},
 	}
 }
