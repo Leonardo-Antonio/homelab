@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../../components/Button.jsx'
 import { EmptyState } from '../../components/EmptyState.jsx'
-import { buildLegalSources, searchMovies } from '../../services/movieApi.js'
+import { buildLegalSources, getMovieSourceFilters, searchMovies } from '../../services/movieApi.js'
 import { notify } from '../../services/notifications.js'
 import './CinemaPage.css'
 
 const DEFAULT_QUERY = 'sherlock jr'
-const SOURCE_FILTERS = [
-  { id: 'all', label: 'Todo' },
-  { id: 'archive', label: 'Archive.org' },
-  { id: 'dailymotion', label: 'Dailymotion' },
-]
 
 export function CinemaPage() {
   const [query, setQuery] = useState(DEFAULT_QUERY)
@@ -54,6 +49,7 @@ export function CinemaPage() {
     () => (selectedMovie ? buildLegalSources(selectedMovie) : []),
     [selectedMovie],
   )
+  const sourceFilters = useMemo(() => getMovieSourceFilters(), [])
   const filteredMovies = useMemo(() => {
     if (sourceFilter === 'all') return movies
     return movies.filter((movie) => movie.source === sourceFilter)
@@ -102,7 +98,7 @@ export function CinemaPage() {
       </header>
 
       <div className="cinema-source-tabs" aria-label="Fuentes de busqueda">
-        {SOURCE_FILTERS.map((source) => (
+        {sourceFilters.map((source) => (
           <button
             className={sourceFilter === source.id ? 'source-tab source-tab-active' : 'source-tab'}
             key={source.id}

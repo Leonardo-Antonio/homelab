@@ -3,6 +3,59 @@ const ARCHIVE_METADATA_URL = 'https://archive.org/metadata'
 const ARCHIVE_DOWNLOAD_URL = 'https://archive.org/download'
 const DAILYMOTION_SEARCH_URL = 'https://api.dailymotion.com/videos'
 
+// To add a source, append one object here. The search function receives
+// (term, limit) and must return createMovieResult(...) items.
+export const MOVIE_SOURCE_CONFIGS = [
+  {
+    id: 'archive',
+    label: 'Archive.org',
+    enabled: true,
+    limit: 10,
+    search: searchArchiveMovies,
+  },
+  {
+    id: 'dailymotion',
+    label: 'Dailymotion',
+    enabled: true,
+    limit: 8,
+    search: searchDailymotionVideos,
+  },
+]
+
+export function createMovieResult({
+  id,
+  source,
+  sourceLabel,
+  playbackType = 'external',
+  title,
+  director = '',
+  releaseYear = null,
+  genre = '',
+  rating = '',
+  runtime = null,
+  posterUrl = '',
+  previewUrl = '',
+  sourceUrl = '',
+  description = '',
+}) {
+  return {
+    id,
+    source,
+    sourceLabel,
+    playbackType,
+    title,
+    director,
+    releaseYear,
+    genre,
+    rating,
+    runtime,
+    posterUrl,
+    previewUrl,
+    sourceUrl,
+    description: description || 'Sin descripcion disponible.',
+  }
+}
+
 function archiveFileUrl(identifier, fileName) {
   const encodedName = fileName.split('/').map(encodeURIComponent).join('/')
   return `${ARCHIVE_DOWNLOAD_URL}/${encodeURIComponent(identifier)}/${encodedName}`
@@ -33,7 +86,7 @@ function normalizeSearchDoc(doc, metadata = null) {
   const subjects = Array.isArray(doc.subject) ? doc.subject : item.subject
   const subjectLabel = Array.isArray(subjects) ? subjects.slice(0, 2).join(' / ') : subjects
 
-  return {
+  return createMovieResult({
     id: `archive:${doc.identifier}`,
     source: 'archive',
     sourceLabel: 'Archive.org',
@@ -48,7 +101,7 @@ function normalizeSearchDoc(doc, metadata = null) {
     previewUrl: playableFile ? archiveFileUrl(doc.identifier, playableFile.name) : '',
     sourceUrl: `https://archive.org/details/${encodeURIComponent(doc.identifier)}`,
     description: cleanText(item.description || doc.description) || 'Sin sinopsis disponible.',
-  }
+  })
 }
 
 function normalizeDailymotionVideo(video) {
@@ -56,7 +109,7 @@ function normalizeDailymotionVideo(video) {
     ? new Date(video.created_time * 1000).getFullYear()
     : null
 
-  return {
+  return createMovieResult({
     id: `dailymotion:${video.id}`,
     source: 'dailymotion',
     sourceLabel: 'Dailymotion',
@@ -71,7 +124,7 @@ function normalizeDailymotionVideo(video) {
     previewUrl: video.embed_url || '',
     sourceUrl: video.url || `https://www.dailymotion.com/video/${video.id}`,
     description: cleanText(video.description) || 'Sin descripcion disponible.',
-  }
+  })
 }
 
 async function fetchMetadata(identifier) {
@@ -84,14 +137,28 @@ export async function searchMovies(query, { limit = 18 } = {}) {
   const term = query.trim()
   if (!term) return []
 
-  const archiveLimit = Math.max(8, Math.ceil(limit * 0.66))
-  const dailymotionLimit = Math.max(6, limit - archiveLimit)
-  const [archiveMovies, dailymotionVideos] = await Promise.all([
-    searchArchiveMovies(term, archiveLimit),
-    searchDailymotionVideos(term, dailymotionLimit),
-  ])
+  const enabledSources = MOVIE_SOURCE_CONFIGS.filter((source) => source.enabled)
+  const resultGroups = await Promise.all(
+    enabledSources.map(async (source) => {
+      try {
+        const sourceLimit = Math.min(source.limit || limit, limit)
+        return source.search(term, sourceLimit)
+      } catch {
+        return []
+      }
+    }),
+  )
 
-  return [...archiveMovies, ...dailymotionVideos]
+  return resultGroups.flat()
+}
+
+export function getMovieSourceFilters() {
+  return [
+    { id: 'all', label: 'Todo' },
+    ...MOVIE_SOURCE_CONFIGS
+      .filter((source) => source.enabled)
+      .map((source) => ({ id: source.id, label: source.label })),
+  ]
 }
 
 async function searchArchiveMovies(term, limit) {
