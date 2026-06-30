@@ -4,6 +4,7 @@ const routes = [
   { path: '/clipboard', page: 'clipboard' },
   { path: '/photos', page: 'photos' },
   { path: '/cinema', page: 'cinema' },
+  { path: '/music', page: 'music' },
   { path: '/camera', page: 'camera' },
   { path: '/terminal', page: 'terminal' },
   { path: '/notes', page: 'notes' },

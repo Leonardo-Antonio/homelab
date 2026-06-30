@@ -19,6 +19,15 @@ type Config struct {
 	SSH             SSHConfig
 	Network         NetworkConfig
 	Cinema          CinemaConfig
+	Music           MusicConfig
+}
+
+// MusicConfig holds the Spotify app credentials used by the music search proxy
+// (client credentials flow). Empty credentials disable the feature gracefully.
+type MusicConfig struct {
+	SpotifyClientID     string
+	SpotifyClientSecret string
+	RequestTimeout      time.Duration
 }
 
 // CinemaConfig controls the server-side catalog scraper. Sources is an
@@ -84,6 +93,11 @@ func Load() Config {
 			Sources:        getEnv("CINEMA_SOURCES", ""),
 			RequestTimeout: getDurationSeconds("CINEMA_REQUEST_TIMEOUT_SECONDS", 12),
 			UserAgent:      getEnv("CINEMA_USER_AGENT", ""),
+		},
+		Music: MusicConfig{
+			SpotifyClientID:     getEnv("SPOTIFY_CLIENT_ID", ""),
+			SpotifyClientSecret: getEnv("SPOTIFY_CLIENT_SECRET", ""),
+			RequestTimeout:      getDurationSeconds("SPOTIFY_REQUEST_TIMEOUT_SECONDS", 12),
 		},
 	}
 }

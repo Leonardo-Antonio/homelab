@@ -6,6 +6,7 @@ import { CameraStreamPage } from './pages/CameraStreamPage/CameraStreamPage.jsx'
 import { CinemaPage } from './pages/CinemaPage/CinemaPage.jsx'
 import { ClipboardPage } from './pages/ClipboardPage/ClipboardPage.jsx'
 import { ConfigPage } from './pages/ConfigPage/ConfigPage.jsx'
+import { MusicPage } from './pages/MusicPage/MusicPage.jsx'
 import { NetworkPage } from './pages/NetworkPage/NetworkPage.jsx'
 import { NotesPage } from './pages/NotesPage/NotesPage.jsx'
 import { PhotosPage } from './pages/PhotosPage/PhotosPage.jsx'
@@ -18,6 +19,7 @@ const pages = {
   clipboard: <ClipboardPage />,
   photos: <PhotosPage />,
   cinema: <CinemaPage />,
+  music: <MusicPage />,
   camera: <CameraStreamPage />,
   terminal: <TerminalPage />,
   notes: <NotesPage />,

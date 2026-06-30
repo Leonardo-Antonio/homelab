@@ -14,6 +14,7 @@ import (
 	"homelab/backend/internal/config"
 	"homelab/backend/internal/database"
 	"homelab/backend/internal/httpapi"
+	"homelab/backend/internal/music"
 	"homelab/backend/internal/network"
 	"homelab/backend/internal/notes"
 	"homelab/backend/internal/photos"
@@ -66,6 +67,12 @@ func main() {
 		cinema.Config{Timeout: cfg.Cinema.RequestTimeout, UserAgent: cfg.Cinema.UserAgent},
 	)
 	cinemaHandler := cinema.NewHandler(cinemaService)
+	musicService := music.NewService(music.Config{
+		ClientID:     cfg.Music.SpotifyClientID,
+		ClientSecret: cfg.Music.SpotifyClientSecret,
+		Timeout:      cfg.Music.RequestTimeout,
+	})
+	musicHandler := music.NewHandler(musicService)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -79,6 +86,7 @@ func main() {
 	settingsHandler.Register(mux)
 	networkHandler.Register(mux)
 	cinemaHandler.Register(mux)
+	musicHandler.Register(mux)
 
 	handler := httpapi.Recover(httpapi.Logger(httpapi.CORS(cfg.AllowedOrigin)(mux)))
 	server := &http.Server{

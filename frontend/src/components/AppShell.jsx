@@ -8,6 +8,7 @@ const moduleItems = [
   { id: 'clipboard', icon: '#' },
   { id: 'photos', icon: 'O' },
   { id: 'cinema', icon: '▶' },
+  { id: 'music', icon: '♪' },
   { id: 'camera', icon: '>' },
   { id: 'terminal', icon: '_' },
   { id: 'notes', icon: '≡' },

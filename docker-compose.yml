@@ -27,6 +27,11 @@ services:
       NETWORK_DHCP_LEASE_PATH: ${NETWORK_DHCP_LEASE_PATH:-}
       NETWORK_DNS_LOG_PATH: ${NETWORK_DNS_LOG_PATH:-}
       NETWORK_BLOCKLIST_PATH: ${NETWORK_BLOCKLIST_PATH:-/app/data/network-blocklist.txt}
+      # Music search (Spotify). Create an app at https://developer.spotify.com
+      # and set the client id/secret to enable the Music page. Empty values
+      # disable the feature; the page then shows a "configure your keys" notice.
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
     volumes:
       - ./backend/data:/app/data
       - /var/log:/host/var/log:ro
